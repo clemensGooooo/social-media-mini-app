@@ -1,0 +1,28 @@
+{
+  "name": "yellow",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "nodemon server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@graphql-tools/schema": "^10.0.16",
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-graphql": "^0.12.0",
+    "graphql": "^16.10.0",
+    "graphql-http": "^1.22.3",
+    "graphql-upload": "^17.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "minio": "^8.0.3",
+    "mongoose": "^8.9.3",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
