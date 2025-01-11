@@ -11,6 +11,7 @@ const schema = buildSchema(`
     profilePicture: String
     bio: String
     error: String
+    followerRequest: Int
   }
   type PublicUser {
     username: String,

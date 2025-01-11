@@ -7,7 +7,7 @@ import User from './components/User.vue'
 import Profile from './components/Profile.vue'
 import Home from './components/Home.vue'
 import Followers from './components/Followers.vue'
-
+import './assets/base.css'
 const routes = [
   { path: '/', component: Home,name: 'home' },
     { path: '/login', component: Login,name: 'login' },

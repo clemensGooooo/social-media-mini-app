@@ -10,7 +10,8 @@
                 <h1 class="username">{{ user.username }}</h1>
                 <p class="bio">{{ user.bio }}</p>
                 <p class="role">Role: {{ user.role }}</p>
-                <button class="follow-button">Follow</button>
+                <button class="follow-button" @click="followRequest" :disabled="isFollowButtonDisabled">{{ followButtonText
+                }}</button>
             </div>
             <div v-for="post in posts" :key="post.postId" class="post-card">
                 <div class="post-header">
@@ -34,6 +35,7 @@
 </template>
 <script>
 import Navbar from '@/components/Navbar.vue';
+import axios from 'axios';
 
 export default {
     data() {
@@ -42,6 +44,8 @@ export default {
             posts: [],
             loading: true,
             error: null,
+            followButtonText: 'Follow Request',
+            isFollowButtonDisabled: false,
         };
     },
     mounted() {
@@ -137,6 +141,31 @@ export default {
                 // Add the like (this should be a call to the backend to like the post)
                 post.likes.push({ username });
             }
+        },
+        async followRequest() {
+            const mutation = `
+            mutation RequestFollow {
+    requestFollow(username: "${this.$route.params.username}") {
+        success
+        error
+    }
+}
+        `;
+            const response = await axios.post('http://localhost:4000/graphql', {
+                query: mutation,
+            }, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+                }
+            });
+            const { data } = response.data;
+            if (data.requestFollow.error) {
+                this.error = data.requestFollow.error;
+            }
+            else if (data.requestFollow.success) {
+                this.followButtonText = 'Follow Requested';  // Change the button text
+                this.isFollowButtonDisabled = true;  // Disable the button
+            }
         }
     },
 };
@@ -145,10 +174,10 @@ export default {
 <style scoped>
 .posts-container {
     padding: 20px;
-    background-color: #ece3f0;
+    background-color: #000000;
     /* Light lavender */
     width: 60%;
-    margin: 0 auto;
+    margin: 50px auto;
     /* Center the container */
     max-width: 100%;
     /* Use only 60% of the center space */
@@ -179,16 +208,16 @@ export default {
 }
 
 .post-card {
-    background-color: #ffffff;
+    background-color: #111111;
     /* White for contrast */
     border-radius: 12px;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
     /* Soft shadow */
-    border: solid 1px #d4d4d4;
+    border: solid 1px #252525;
     /* Subtle border */
     margin-bottom: 25px;
     padding: 20px;
-    color: #4a148c;
+    color: #570bb3;
     /* Deep purple */
     font-family: 'Roboto', sans-serif;
     transition: transform 0.2s, box-shadow 0.2s;
@@ -221,9 +250,8 @@ export default {
 }
 
 .username {
-    font-size: 1.2rem;
     font-weight: bold;
-    color: #4a148c;
+    color: #d3d3d3;
     font-family: 'Poppins', sans-serif;
     /* Stylish font */
 }
@@ -231,7 +259,7 @@ export default {
 .post-content {
     margin-top: 15px;
     font-size: 1.2rem;
-    color: #333333;
+    color: #c9c9c9;
     /* Neutral, readable text */
     line-height: 1.6;
     /* Better readability */
@@ -287,7 +315,7 @@ export default {
 }
 
 .like-button.liked {
-    background-color: #ffcccc;
+    background-color: #2e2e2e;
     box-shadow: 0 0 8px rgba(141, 97, 174, 0.3);
 }
 
@@ -371,5 +399,14 @@ export default {
     /* Darker purple when clicked */
     transform: scale(0.98);
     /* Slightly shrink on click */
-}</style>
+}
+
+.follow-button.disabled {
+    background-color: #ccc;
+    /* Light gray background */
+    cursor: not-allowed;
+    /* Disable pointer cursor */
+    
+}
+</style>
   

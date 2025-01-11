@@ -86,13 +86,12 @@ export default {
   justify-content: center;
   height: 90vh;
   width: 100%;
-  background-color: #f3f0f9; /* Soft purple background */
   font-family: Arial, sans-serif;
 }
 
 .login-title {
   font-size: 2rem;
-  color: #4b0082; /* Darker purple for the title */
+  color: #d4d4d4; /* Darker purple for the title */
   margin-bottom: 1.5rem;
 }
 
@@ -101,11 +100,11 @@ export default {
   max-width: 400px;
   display: flex;
   flex-direction: column;
-  background-color: #fff;
+  background-color: #000000;
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid #d1c4e9; /* Light purple border for the form */
+  border: 1px solid #8413a0; /* Light purple border for the form */
 }
 
 .login-form a {
@@ -124,7 +123,9 @@ export default {
   font-size: 1rem;
   padding: 0.75rem;
   margin-bottom: 1.5rem;
-  border: 1px solid #b39ddb; /* Subtle purple border */
+  background-color: #36323f;
+  color: white;
+  border: 1px solid #36323f; /* Subtle purple border */
   border-radius: 4px;
   outline: none;
   transition: border-color 0.3s, box-shadow 0.3s;

@@ -6,27 +6,33 @@
         </div>
 
         <div class="navbar-right">
-            <button class="navbar-item" @click="profile">
-                <img v-if="profileImage" :src="profileImage" alt="Profile" class="profile-image" />
-                <span v-else>Profile</span>
-            </button>
+            <img v-if="profileImage" :src="profileImage" alt="Profile" class="profile-image clickable" @click="profile" />
+
+            <span v-else class="profile-placeholder clickable" @click="profile">
+                Profile
+            </span>
             <button class="navbar-item" @click="logout">Logout</button>
         </div>
     </nav>
 </template>
   
 <script>
+import image from "../assets/profile.png"
+
+
 export default {
     data() {
         return {
             profileImage: null, // Will hold the profile image URL
+            image: image
         };
     },
     async created() {
         const query = `
         query GetUserProfile {
-          getUsers {
+        getUser {
             profilePicture
+            followerRequest
           }
         }
       `;
@@ -35,12 +41,17 @@ export default {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+
                 },
                 body: JSON.stringify({ query }),
             });
             const { data } = await response.json();
             // Assuming the first user in the list is the logged-in user
-            this.profileImage = data.getUsers[0]?.profilePicture;
+            this.profileImage = data.getUser.profilePicture;
+            if (this.profileImage == "none") {
+                this.profileImage = image
+            }
         } catch (err) {
             console.error("Error fetching profile image:", err);
         }
@@ -98,11 +109,25 @@ export default {
 }
 
 .profile-image {
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     object-fit: cover;
-    margin-right: 0.5rem;
+    cursor: pointer;
+}
+
+.profile-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #ccc;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: 1rem;
+    text-transform: uppercase;
 }
 </style>
   

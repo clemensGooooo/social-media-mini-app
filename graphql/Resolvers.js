@@ -22,7 +22,8 @@ const resolvers = {
                 username: user.username,
                 bio: user.bio,
                 role: user.role,
-                profilePicture: user.profilePicture
+                profilePicture: user.profilePicture,
+                followerRequest: user.requested_followers.length
             };
         } catch (err) {
             return { error: "Error retrieving user" };
@@ -363,7 +364,7 @@ const resolvers = {
                     postId: post.postId,
                     mediaContent: post.mediaContent
                 };
-            });
+            }).reverse();
             return {error: null, posts: filteredPosts};
         } catch (err) {
             return { error: "Error retrieving posts" }

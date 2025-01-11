@@ -197,16 +197,15 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #f4f0f8;
-    height: 100vh;
+    padding-top: 50px;
 }
 
 .profile-card {
-    background-color: #fff;
+    background-color: #000000;
     border: 2px solid #8a2be2;
     border-radius: 12px;
     padding: 20px;
-    max-width: 400px;
+    max-width: 700px;
     width: 100%;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 }
@@ -247,9 +246,11 @@ label {
 input, textarea {
     width: 100%;
     padding: 8px;
-    border: 1px solid #dcdcdc;
+    border: 1px solid #2b2a33;
     border-radius: 4px;
     font-size: 14px;
+    background-color: #2b2a33;
+    color: #f8f8fb;
 }
 .update-button {
     background-color: #8a2be2;
@@ -258,7 +259,7 @@ input, textarea {
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    width: 105%;
+    width: 100%;
     font-size: 16px;
 
 }

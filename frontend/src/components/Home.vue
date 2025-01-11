@@ -1,12 +1,10 @@
 <template>
     <Navbar />
-    <div class="post-creation-container">
+    <div class="main-container">
         <h2>Create a Post</h2>
         <textarea v-model="content" placeholder="Write something..." rows="4"></textarea>
         <button @click="createPost">Create Post</button>
         <p v-if="error" class="error">{{ error }}</p>
-    </div>
-    <div class="posts-container">
         <h3 class="title">Your last posts</h3>
         <div v-for="post in posts" :key="post.postId" class="post-card">
             <div class="post-header">
@@ -24,8 +22,6 @@
                 </div>
             </div>
         </div>
-    </div>
-    <div class="users-container">
         <h2>Users you might know</h2>
         <div v-for="user in users" :key="user.username" class="user-card" @click="goToUser(user.username)">
             <img :src="user.profilePicture" alt="Profile Picture" class="profile-picture" />
@@ -127,7 +123,7 @@ export default {
                     this.error = post.error;
                 } else {
                     this.content = '';
-                    alert(`Post created with ID: ${post.postId}`);
+                    this.fetchPosts()
                 }
             }
         },
@@ -201,26 +197,16 @@ export default {
 </script>
   
 <style scoped>
-.users-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    margin: 2rem auto;
-    max-width: 600px;
-    padding: 1rem;
-    box-sizing: border-box;
-}
-
 .user-card {
     cursor: pointer;
     display: flex;
     gap: 1rem;
     align-items: center;
     padding: 1rem;
-    border: 1px solid #ddd;
+    border: 1px solid #272323;
     border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    background: #fff;
+    background: #131212;
 }
 
 .profile-picture {
@@ -237,7 +223,7 @@ export default {
 .user-details h3 {
     margin: 0 0 0.5rem;
     font-size: 1.2rem;
-    color: #333;
+    color: #cfcfcf;
 }
 
 .user-details p {
@@ -256,7 +242,7 @@ export default {
     border-radius: 4px;
 }
 
-.post-creation-container {
+.main-container {
     margin: 10px;
     display: flex;
     flex-direction: column;
@@ -265,11 +251,12 @@ export default {
     max-width: 1000px;
     padding: 1rem;
     box-sizing: border-box;
-    background-color: #f3e5f5;
+    background-color: #000000;
     border-radius: 8px;
     width: 100%;
     margin: 0 auto;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 50px;
 }
 
 h2 {
@@ -282,15 +269,16 @@ h2 {
 textarea {
     width: 100%;
     padding: 15px;
-    border: 1px solid #d1c4e9;
+    border: 1px solid #2b2a33;
     border-radius: 10px;
-    background-color: #ffffff;
+    background-color: #2b2a33;
     font-size: 1.1em;
     resize: none;
     box-sizing: border-box;
     transition: all 0.3s ease;
     margin-bottom: 10px;
     outline: none;
+    color: white;
 }
 
 textarea:focus {
@@ -315,42 +303,17 @@ button:hover {
     background-color: #7b1fa2;
 }
 
-.posts-container {
-    padding: 20px;
-    background-color: #ece3f0;
-    /* Light lavender */
-    width: 100%;
-    margin: 0 auto;
-    /* Center the container */
-    max-width: 1000px;
-    /* Use only 60% of the center space */
-    border-radius: 10px;
-    /* Rounded corners for the container */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    /* Soft shadow */
-    padding-bottom: 100px;
-}
-
-.loading {
-    text-align: center;
-    color: #5e35b1;
-    font-size: 1.5rem;
-    font-family: 'Roboto', sans-serif;
-    font-style: italic;
-    /* Subtle emphasis */
-}
-
 .post-card {
-    background-color: #ffffff;
+    background-color: #080808;
     /* White for contrast */
     border-radius: 12px;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
     /* Soft shadow */
-    border: solid 1px #d4d4d4;
+    border: solid 1px #242429;
     /* Subtle border */
     margin-bottom: 25px;
     padding: 20px;
-    color: #4a148c;
+    color: #b3b3b3;
     /* Deep purple */
     font-family: 'Roboto', sans-serif;
     transition: transform 0.2s, box-shadow 0.2s;
@@ -393,7 +356,7 @@ button:hover {
 .post-content {
     margin-top: 15px;
     font-size: 1.2rem;
-    color: #333333;
+    color: #ffffff;
     /* Neutral, readable text */
     line-height: 1.6;
     /* Better readability */
@@ -449,7 +412,7 @@ button:hover {
 }
 
 .like-button.liked {
-    background-color: #ffcccc;
+    background-color: #2e2e2e;
     box-shadow: 0 0 8px rgba(141, 97, 174, 0.3);
 }
 
