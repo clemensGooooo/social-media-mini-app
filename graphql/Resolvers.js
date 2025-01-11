@@ -415,10 +415,15 @@ const resolvers = {
             return { error: "You are not authorized to perform this action" };
         }
         try {
-            const post = await Posts.findOneAndDelete({ postId: { $eq: postId } });
+            const post = await Posts.findOne({ postId: { $eq: postId } });
             if (!post) {
-                return { error: "Post not found" }
+                return { error: "Post not found" };
             }
+
+            if (!post.users.includes(context.auth.id)) {
+                return { error: "You are not authorized to delete this post" };
+            }
+            await Posts.deleteOne({ postId: { $eq: postId } });
             return { success: true };
         } catch (err) {
             return { error: "Unexpected error" }
@@ -438,7 +443,7 @@ const resolvers = {
                     profilePicture: user_r.profilePicture
                 };
             });
-            const likers = post.likes.map(async (user) => {
+            const likes = post.likes.map(async (user) => {
                 const user_r = await User.findById(user);
                 return {
                     username: user_r.username,
@@ -447,7 +452,7 @@ const resolvers = {
                     profilePicture: user_r.profilePicture
                 };
             });
-            return { likers, creators };
+            return { likes, creators };
         };
         try {
             const post_initial = await Posts.findOne({ postId: { $eq: postId } });
@@ -455,9 +460,9 @@ const resolvers = {
                 return { error: "Post not found" }
             }
             const { likes, creators } = await getProperties(post_initial);
-
+            
             const linked_posts_unfiltered = await Posts.find({ referredTo: { $eq: post_initial.id } });
-
+            
             const linked_posts = await linked_posts_unfiltered.map(async (post) => {
                 const { likes, creators } = await getProperties(post);
                 return {

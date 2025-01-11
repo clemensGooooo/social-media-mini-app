@@ -7,13 +7,17 @@ import User from './components/User.vue'
 import Profile from './components/Profile.vue'
 import Home from './components/Home.vue'
 import Followers from './components/Followers.vue'
+import Post from './components/Post.vue'
+
 import './assets/base.css'
+
 const routes = [
   { path: '/', component: Home,name: 'home' },
     { path: '/login', component: Login,name: 'login' },
     { path: '/register', component: Register,name: 'register' },
     { path: '/profile', component: Profile,name: 'profile' },
     { path: '/user/:username', component: User,name: 'user' },
+    { path: '/post/:postId', component: Post,name: 'post' },
     { path: '/followers', component: Followers,name: 'followers' },
   ]
   

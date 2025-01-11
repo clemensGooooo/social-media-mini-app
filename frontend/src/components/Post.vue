@@ -1,19 +1,46 @@
 <template>
     <Navbar />
-    <div class="posts-container">
-
+    <div class="post-container">
         <div v-if="loading" class="loading">Loading...</div>
         <div v-else>
-            <div class="profile-section">
-                <img :src="user.profilePicture" alt="Profile Picture" class="profile-picture" />
-                <h1 class="username">{{ user.username }}</h1>
-                <p class="bio">{{ user.bio }}</p>
-                <p class="role">Role: {{ user.role }}</p>
-                <button v-if="username != user.username" class="follow-button" @click="followRequest"
-                    :disabled="isFollowButtonDisabled">{{ followButtonText
-                    }}</button>
-            </div>
             <div v-if="error" class="error-box">{{ error }}</div>
+            <div class="master-post">
+                <div class="post-header">
+                    <img :src="post.users[0].profilePicture" alt="User Profile" class="profile-img">
+                    <h3 class="username">{{ post.users[0].username }}</h3>
+                    <button v-if="post.users.find((user) => user.username == username)" @click="deletePost(post)"
+                        class="delete-post-button" title="Delete Post">
+                        <svg class="delete-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                            width="20" height="20">
+                            <path
+                                d="M3 6h18v2H3V6zm2 3h14v13c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V9zm3 3v7h2v-7H8zm4 0v7h2v-7h-2zm4 0v7h2v-7h-2zM9 4h6V2H9v2z" />
+                        </svg>
+                    </button>
+                </div>
+                <p class="post-content">{{ post.content }}</p>
+                <div class="post-footer" @click="">
+                    <span>{{ post.date }}</span>
+                    <div class="like-container">
+                        <span class="likes-count">{{ post.likes.length }}</span>
+                        <button @click="toggleLike(post)"
+                            :class="{ 'liked': post.likes.find((user) => { console.log(user, username); return user.username == username }) ? true : false }"
+                            class="like-button">
+                            <i class="like-icon"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="comments-section">
+                    <ul class="comments-list">
+                        <li v-for="comment in post.comments" :key="comment.commentId" class="comment-item">
+                            <strong>{{ comment.user.username }}:</strong> {{ comment.content }}
+                        </li>
+                    </ul>
+                    <div class="comment-input-container">
+                        <input type="text" v-model="content" placeholder="Write a comment..." class="comment-input" />
+                        <button @click="addComment(post)" class="comment-button">Comment</button>
+                    </div>
+                </div>
+            </div>
             <div v-for="post in posts" :key="post.postId" class="post-card">
                 <div class="post-header">
                     <img :src="post.users[0].profilePicture" alt="User Profile" class="profile-img">
@@ -27,7 +54,7 @@
                         </svg>
                     </button>
                 </div>
-                <p class="post-content" @click="openPost(post)">{{ post.content }}</p>
+                <p class="post-content">{{ post.content }}</p>
                 <div class="post-footer" @click="">
                     <span>{{ post.date }}</span>
                     <div class="like-container">
@@ -51,13 +78,14 @@ import axios from 'axios';
 export default {
     data() {
         return {
-            user: {},
             posts: [],
             loading: true,
             error: null,
             followButtonText: 'Follow Request',
             isFollowButtonDisabled: false,
             username: '',
+            post: {},
+            content: ""
         };
     },
     mounted() {
@@ -68,43 +96,55 @@ export default {
     },
     methods: {
         async fetchPosts() {
-            const username = this.$route.params.username
+            const postId = this.$route.params.postId
             const query = `
-            query GetPublicUser {
-                getPublicUser(username: "${username}") {
+            query GetPost {
+    getPost(postId: "${postId}") {
+        content
+        date
+        postId
+        error
+        mediaContent
+        users {
+            username
+            error
+            profilePicture
+            bio
+            role
+        }
+        likes {
+            username
+            error
+            profilePicture
+            bio
+            role
+        }
+        linked_posts {
+            content
+            date
+            postId
+            mediaContent
+            users {
                 username
                 error
                 profilePicture
                 bio
                 role
-                }
-                getUser {
+            }
+            likes {
+                username
+                error
+                profilePicture
+                bio
+                role
+            }
+        }
+    },
+    getUser {
         username
     }
-    getPosts(username: "${username}") {
-                error
-                posts {
-                    content
-                    date
-                    postId
-                    mediaContent
-                    users {
-                        username
-                        error
-                        profilePicture
-                        bio
-                        role
-                    }
-                    likes {
-                        username
-                        error
-                        profilePicture
-                        bio
-                        role
-                    }
-                }
-            }
-            }
+}
+
             `;
 
             const response = await fetch('http://localhost:4000/graphql', {
@@ -118,14 +158,15 @@ export default {
             });
 
             const { data } = await response.json();
-            if (data.getPosts.error) {
-                this.error = data.getPosts.error;
+            if (data.getPost.error) {
+                this.error = data.getPost.error;
                 this.loading = false;
                 return;
             }
-            this.user = data.getPublicUser
+            this.posts = data.getPost.linked_posts
+            this.post = data.getPost
             this.username = data.getUser.username
-            this.posts = data.getPosts.posts;
+
             this.loading = false;
         },
         async toggleLike(post) {
@@ -214,15 +255,54 @@ isLiked
                 this.fetchPosts()
             }
         },
-        openPost(post) {
-            this.$router.push({ name: 'post', params: { postId: post.postId } });
+        async addComment() {
+            if (!this.content.trim()) {
+                this.error = 'Content cannot be empty!';
+                return;
+            }
+
+            const mutation = `
+        mutation CreatePost {
+          createPost(content: "${this.content}",referredTo: "${this.post.postId}") {
+            postId
+            error
+          }
         }
+      `;
+
+            const response = await fetch('http://localhost:4000/graphql', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+
+                },
+                body: JSON.stringify({
+                    query: mutation,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.errors) {
+                this.error = data.errors[0].message;
+            } else {
+                const post = data.data.createPost;
+                if (post.error) {
+                    this.error = post.error;
+                } else {
+                    this.content = '';
+                    this.fetchPosts()
+                }
+            }
+        },
+
     },
 };
 </script>
   
 <style scoped>
-.posts-container {
+.post-container {
     padding: 20px;
     background-color: #000000;
     /* Light lavender */
@@ -238,15 +318,6 @@ isLiked
     padding-bottom: 100px;
 }
 
-.title {
-    font-size: 2.5rem;
-    font-family: 'Poppins', sans-serif;
-    /* Modern, clean font */
-    color: #5e35b1;
-    /* Deep purple */
-    text-align: center;
-    margin-bottom: 30px;
-}
 
 .loading {
     text-align: center;
@@ -313,18 +384,13 @@ isLiked
     /* Neutral, readable text */
     line-height: 1.6;
     /* Better readability */
-}
-
-.divider {
-    height: 1px;
-    background-color: #e0e0e0;
-    /* Subtle divider between sections */
-    margin: 20px 0;
+    word-wrap: break-word;
 }
 
 .like-container {
     display: flex;
     align-items: center;
+    float: right;
     gap: 8px;
     font-family: Arial, sans-serif;
 }
@@ -389,74 +455,10 @@ isLiked
     align-items: center;
 }
 
-.profile-section {
-    text-align: center;
-    margin-bottom: 40px;
-}
-
-.profile-picture {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    border: 4px solid #fff;
-    margin-bottom: 20px;
-}
-
 .username {
     font-size: 2em;
     font-weight: bold;
     margin-bottom: 10px;
-}
-
-.bio {
-    font-size: 1.2em;
-    margin-bottom: 10px;
-}
-
-.role {
-    font-size: 1em;
-    font-style: italic;
-}
-
-.follow-button {
-    background-color: #6a1b9a;
-    /* Purple background */
-    color: white;
-    /* White text */
-    border: none;
-    /* Remove default border */
-    padding: 12px 24px;
-    /* Add padding for size */
-    font-size: 16px;
-    /* Set font size */
-    border-radius: 30px;
-    /* Rounded corners */
-    cursor: pointer;
-    /* Pointer cursor on hover */
-    transition: background-color 0.3s ease, transform 0.2s;
-    /* Smooth transitions */
-}
-
-.follow-button:hover {
-    background-color: #8e24aa;
-    /* Lighter purple on hover */
-    transform: scale(1.05);
-    /* Slightly enlarge the button */
-}
-
-.follow-button:active {
-    background-color: #4a0072;
-    /* Darker purple when clicked */
-    transform: scale(0.98);
-    /* Slightly shrink on click */
-}
-
-.follow-button.disabled {
-    background-color: #ccc;
-    /* Light gray background */
-    cursor: not-allowed;
-    /* Disable pointer cursor */
-
 }
 
 .delete-post-button {
@@ -502,5 +504,77 @@ isLiked
 
 .delete-post-button:active {
     transform: scale(0.95);
-}</style>
+}
+
+.comments-section {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #1a1a1a;
+    /* Slightly lighter than the black background */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.comments-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 15px 0;
+}
+
+.comment-item {
+    padding: 5px 0;
+    border-bottom: 1px solid #333;
+    color: #d3d3d3;
+    /* Light gray for text */
+}
+
+.comment-item:last-child {
+    border-bottom: none;
+}
+
+.comment-input-container {
+    display: flex;
+    gap: 10px;
+}
+
+.comment-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 5px;
+    background-color: #252525;
+    color: #d3d3d3;
+    font-family: 'Roboto', sans-serif;
+}
+
+.comment-input:focus {
+    outline: 2px solid #6a1b9a;
+    /* Purple border for focus */
+}
+
+.comment-button {
+    padding: 8px 15px;
+    background-color: #5e35b1;
+    /* Deep purple */
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.comment-button:hover {
+    background-color: #7c4dff;
+    /* Brighter purple */
+}
+
+.comment-button:active {
+    background-color: #4a148c;
+    /* Darker purple for active state */
+}
+.master-post {
+    margin-bottom: 50px;
+}
+</style>
   

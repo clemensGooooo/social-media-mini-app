@@ -5,14 +5,14 @@
         <textarea v-model="content" placeholder="Write something..." rows="4"></textarea>
         <button @click="createPost" class="post-button">Create Post</button>
         <p v-if="error" class="error">{{ error }}</p>
-        <h3 class="title">Your last posts</h3>
+        <h2>Your last posts</h2>
         <div v-for="post in posts" :key="post.postId" class="post-card">
             <div class="post-header">
                 <img :src="post.users[0].profilePicture == 'none' ? image : post.users[0].profilePicture" alt="User Profile"
                     class="profile-img">
                 <h3 class="username">{{ post.users[0].username }}</h3>
             </div>
-            <p class="post-content">{{ post.content }}</p>
+            <p class="post-content" @click="openPost(post)">{{ post.content }}</p>
             <div class="post-footer">
                 <span>{{ post.date }}</span>
                 <div class="like-container">
@@ -232,6 +232,9 @@ export default {
             } else {
                 this.fetchPosts()
             }
+        },
+        openPost(post) {
+            this.$router.push({ name: 'post', params: { postId: post.postId } });
         }
     },
     components: { Navbar }
