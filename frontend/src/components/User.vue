@@ -1,8 +1,7 @@
 <template>
     <Navbar />
     <div class="posts-container">
-        <div v-if="error" class="error-box">{{ error }}</div>
-
+        
         <div v-if="loading" class="loading">Loading...</div>
         <div v-else>
             <div class="profile-section">
@@ -13,6 +12,7 @@
                 <button class="follow-button" @click="followRequest" :disabled="isFollowButtonDisabled">{{ followButtonText
                 }}</button>
             </div>
+            <div v-if="error" class="error-box">{{ error }}</div>
             <div v-for="post in posts" :key="post.postId" class="post-card">
                 <div class="post-header">
                     <img :src="post.users[0].profilePicture" alt="User Profile" class="profile-img">
@@ -23,7 +23,7 @@
                     <span>{{ post.date }}</span>
                     <div class="like-container">
                         <span class="likes-count">{{ post.likes.length }}</span>
-                        <button @click="toggleLike(post)" :class="{ 'liked': post.isLiked }" class="like-button">
+                        <button @click="toggleLike(post)" :class="{ 'liked': post.likes.find((user) => {console.log(user,username);return user.username == username}) ? true : false  }" class="like-button">
                             <i class="like-icon"></i>
                         </button>
                     </div>
@@ -46,6 +46,7 @@ export default {
             error: null,
             followButtonText: 'Follow Request',
             isFollowButtonDisabled: false,
+            username: '',
         };
     },
     mounted() {
@@ -57,7 +58,7 @@ export default {
     methods: {
         async fetchPosts() {
             const username = this.$route.params.username
-            const GET_PUBLIC_USER = `
+            const query = `
             query GetPublicUser {
                 getPublicUser(username: "${username}") {
                 username
@@ -66,11 +67,10 @@ export default {
                 bio
                 role
                 }
-            }
-            `;
-            const query = `
-          query {
-            getPosts(username: "${username}") {
+                getUser {
+        username
+    }
+    getPosts(username: "${username}") {
                 error
                 posts {
                     content
@@ -93,31 +93,17 @@ export default {
                     }
                 }
             }
-          }
-        `;
+            }
+            `;
 
-            const user_response = await fetch('http://localhost:4000/graphql', {
+            const response = await fetch('http://localhost:4000/graphql', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${localStorage.getItem('authToken')}`,
 
                 },
-                body: JSON.stringify({ query: GET_PUBLIC_USER }),
-            });
-            const result = await user_response.json();
-
-            if (result.data.getPublicUser.error) {
-                this.error = result.data.getPublicUser.error;
-            } else {
-                this.user = result.data.getPublicUser;
-            }
-            const response = await fetch('http://localhost:4000/graphql', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ query }),
+                body: JSON.stringify({ query: query }),
             });
 
             const { data } = await response.json();
@@ -126,20 +112,41 @@ export default {
                 this.loading = false;
                 return;
             }
+            this.user = data.getPublicUser
+            this.username = data.getUser.username
             this.posts = data.getPosts.posts;
             this.loading = false;
         },
-        toggleLike(post) {
-            post.isLiked = !post.isLiked;
-            const username = 'hardcoded_username'; // Use the actual username here.
-            const isLiked = post.likes.some(like => like.username === username);
+        async toggleLike(post) {
 
-            if (isLiked) {
-                // Remove the like (this should be a call to the backend to unlike the post)
-                post.likes = post.likes.filter(like => like.username !== username);
+            const mutation = `
+mutation LikePost {
+likePost(postId: "${post.postId}") {
+success
+error
+isLiked
+}
+}
+`;
+
+            const response = await fetch('http://localhost:4000/graphql', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+
+                },
+                body: JSON.stringify({
+                    query: mutation,
+                }),
+            });
+
+            const { data } = await response.json();
+            console.log(data.likePost.isLiked, post.postId)
+            if (data.likePost.error) {
+                this.error = data.likePost.error;
             } else {
-                // Add the like (this should be a call to the backend to like the post)
-                post.likes.push({ username });
+                this.fetchPosts()
             }
         },
         async followRequest() {
@@ -328,9 +335,9 @@ export default {
 }
 
 .error-box {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
+    background-color: #160b0c;
+    color: #b17b80;
+    border: 1px solid #5c1219;
     padding: 10px;
     border-radius: 5px;
     position: relative;
@@ -406,7 +413,7 @@ export default {
     /* Light gray background */
     cursor: not-allowed;
     /* Disable pointer cursor */
-    
+
 }
 </style>
   

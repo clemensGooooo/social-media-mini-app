@@ -3,12 +3,13 @@
     <div class="main-container">
         <h2>Create a Post</h2>
         <textarea v-model="content" placeholder="Write something..." rows="4"></textarea>
-        <button @click="createPost">Create Post</button>
+        <button @click="createPost" class="post-button">Create Post</button>
         <p v-if="error" class="error">{{ error }}</p>
         <h3 class="title">Your last posts</h3>
         <div v-for="post in posts" :key="post.postId" class="post-card">
             <div class="post-header">
-                <img :src="post.users[0].profilePicture" alt="User Profile" class="profile-img">
+                <img :src="post.users[0].profilePicture == 'none' ? image : post.users[0].profilePicture" alt="User Profile"
+                    class="profile-img">
                 <h3 class="username">{{ post.users[0].username }}</h3>
             </div>
             <p class="post-content">{{ post.content }}</p>
@@ -16,7 +17,7 @@
                 <span>{{ post.date }}</span>
                 <div class="like-container">
                     <span class="likes-count">{{ post.likes.length }}</span>
-                    <button @click="toggleLike(post)" :class="{ 'liked': post.isLiked }" class="like-button">
+                    <button @click="toggleLike(post)" :class="{ 'liked': post.likes.find((user) => {console.log(user,username);return user.username == username}) ? true : false }" class="like-button">
                         <i class="like-icon"></i>
                     </button>
                 </div>
@@ -36,7 +37,7 @@
   
 <script>
 import Navbar from './Navbar.vue';
-
+import image from "../assets/profile.png"
 export default {
     data() {
         return {
@@ -44,6 +45,8 @@ export default {
             error: null, // For any errors during the fetch
             content: '',
             posts: [],
+            image: image,
+            username: '',
         };
     },
     mounted() {
@@ -58,7 +61,10 @@ export default {
             profilePicture
             bio
             role
-          }
+          },
+          getUser {
+        username
+    }
         }
       `;
         try {
@@ -66,6 +72,7 @@ export default {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
                 },
                 body: JSON.stringify({ query }),
             });
@@ -75,6 +82,7 @@ export default {
             }
             else {
                 this.users = data.getUsers;
+                this.username = data.getUser.username;
             }
         }
         catch (err) {
@@ -180,6 +188,8 @@ export default {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+
                 },
                 body: JSON.stringify({ query: query_posts }),
             });
@@ -190,6 +200,38 @@ export default {
                 return;
             }
             this.posts = data.getPosts.posts;
+        },
+        async toggleLike(post) {
+
+            const mutation = `
+            mutation LikePost {
+    likePost(postId: "${post.postId}") {
+        success
+        error
+        isLiked
+    }
+}
+      `;
+
+            const response = await fetch('http://localhost:4000/graphql', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+
+                },
+                body: JSON.stringify({
+                    query: mutation,
+                }),
+            });
+
+            const { data } = await response.json();
+            console.log(data.likePost.isLiked, post.postId)
+            if (data.likePost.error) {
+                this.error = data.likePost.error;
+            } else {
+                this.fetchPosts()
+            }
         }
     },
     components: { Navbar }
@@ -287,7 +329,7 @@ textarea:focus {
 }
 
 
-button {
+.post-button {
     background-color: #8e24aa;
     color: white;
     border: none;
@@ -299,7 +341,7 @@ button {
     cursor: pointer;
 }
 
-button:hover {
+.post-button:hover {
     background-color: #7b1fa2;
 }
 

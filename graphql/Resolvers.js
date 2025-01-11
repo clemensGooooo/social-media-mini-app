@@ -331,46 +331,56 @@ const resolvers = {
         }
     },
     getPosts: async ({ username }, context) => {
+        if (context.auth.user !== "user") {
+            return { error: "You are not authorized to perform this action" };
+        }
+        const id = context.auth.id;
+
         try {
             const user = await User.findOne({ username: { $eq: username } });
             if (!user) {
                 return { error: "User not found" }
             }
-            const posts = await Posts.find({ users: { $in: user }, isOnline: { $eq: true }, referredTo: null });
-            const filteredPosts = posts.map(async (post) => {
-                const creators = post.users.map(async (user) => {
-                    const user_r = await User.findById(user);
+            if (user.followers.find((follower) => { return follower._id.toString() == id }) || user._id == id) {
+
+                const posts = await Posts.find({ users: { $in: user }, isOnline: { $eq: true }, referredTo: null });
+                const filteredPosts = posts.map(async (post) => {
+                    const creators = post.users.map(async (user) => {
+                        const user_r = await User.findById(user);
+                        return {
+                            username: user_r.username,
+                            bio: user_r.bio,
+                            role: user_r.role,
+                            profilePicture: user_r.profilePicture
+                        };
+                    });
+                    const likers = post.likes.map(async (user) => {
+                        const user_r = await User.findById(user);
+                        return {
+                            username: user_r.username,
+                            bio: user_r.bio,
+                            role: user_r.role,
+                            profilePicture: user_r.profilePicture
+                        };
+                    });
                     return {
-                        username: user_r.username,
-                        bio: user_r.bio,
-                        role: user_r.role,
-                        profilePicture: user_r.profilePicture
+                        content: post.content,
+                        users: creators,
+                        likes: likers,
+                        date: post.date,
+                        postId: post.postId,
+                        mediaContent: post.mediaContent
                     };
-                });
-                const likers = post.likes.map(async (user) => {
-                    const user_r = await User.findById(user);
-                    return {
-                        username: user_r.username,
-                        bio: user_r.bio,
-                        role: user_r.role,
-                        profilePicture: user_r.profilePicture
-                    };
-                });
-                return {
-                    content: post.content,
-                    users: creators,
-                    likes: likers,
-                    date: post.date,
-                    postId: post.postId,
-                    mediaContent: post.mediaContent
-                };
-            }).reverse();
-            return {error: null, posts: filteredPosts};
+                }).reverse();
+                return { error: null, posts: filteredPosts };
+            } else {
+                return { error: "Become a follower to see the posts!" };
+            }
         } catch (err) {
             return { error: "Error retrieving posts" }
         }
     },
-    likePost: async ({ postId }, context) => {
+    likePost: async ({ postId, remove }, context) => {
         if (context.auth.user !== "user") {
             return { error: "You are not authorized to perform this action" };
         }
@@ -380,12 +390,22 @@ const resolvers = {
             if (!post) {
                 return { error: "Post not found" }
             }
-            const post_liked = await Posts.findByIdAndUpdate(
-                post.id,
-                { $addToSet: { likes: id } },
-                { new: true }
-            );
-            return { success: true };
+            if (post.likes.find((user) => user._id == id)) {
+                const post_liked = await Posts.findByIdAndUpdate(
+                    post.id,
+                    { $pull: { likes: id } },
+                    { new: true }
+                );
+                return { success: true, isLiked: false };
+            } else {
+                const post_liked = await Posts.findByIdAndUpdate(
+                    post.id,
+                    { $addToSet: { likes: id } },
+                    { new: true }
+                );
+                return { success: true, isLiked: true };
+            }
+
         } catch (err) {
             return { error: "Unexpected" }
         }

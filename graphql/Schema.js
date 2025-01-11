@@ -81,6 +81,11 @@ const schema = buildSchema(`
     postId: String
     error: String
   }
+  type LikeResponse {
+    success: Boolean
+    error: String
+    isLiked: Boolean
+  }
 
   type Mutation {
     createUser(username: String!, firstName: String!,lastName: String!,bio: String!,dateOfBirth: String!, email: String!, password: String!): CreateUserResponse
@@ -90,7 +95,7 @@ const schema = buildSchema(`
     requestFollow(username: String!): UpdateUserResponse
     acceptFollow(username: String!): UpdateUserResponse
     createPost(content: String!,referredTo: String,isActivated: Boolean): PostResponse
-    likePost(postId: String!): UpdateUserResponse
+    likePost(postId: String!): LikeResponse
     deletePost(postId: String!): UpdateUserResponse
     activatePost(postId: String!): UpdateUserResponse
   }

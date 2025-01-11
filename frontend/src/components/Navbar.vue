@@ -6,6 +6,8 @@
         </div>
 
         <div class="navbar-right">
+            <button class="navbar-item" @click="goToYourPosts">Your Posts</button>
+
             <img v-if="profileImage" :src="profileImage" alt="Profile" class="profile-image clickable" @click="profile" />
 
             <span v-else class="profile-placeholder clickable" @click="profile">
@@ -24,7 +26,8 @@ export default {
     data() {
         return {
             profileImage: null, // Will hold the profile image URL
-            image: image
+            image: image,
+            username: ""
         };
     },
     async created() {
@@ -32,6 +35,7 @@ export default {
         query GetUserProfile {
         getUser {
             profilePicture
+            username
             followerRequest
           }
         }
@@ -47,8 +51,8 @@ export default {
                 body: JSON.stringify({ query }),
             });
             const { data } = await response.json();
-            // Assuming the first user in the list is the logged-in user
             this.profileImage = data.getUser.profilePicture;
+            this.username = data.getUser.username
             if (this.profileImage == "none") {
                 this.profileImage = image
             }
@@ -70,6 +74,9 @@ export default {
         home() {
             this.$router.push("/");
         },
+        goToYourPosts() {
+            this.$router.push("/user/"+this.username);
+        }
     },
 };
 </script>
