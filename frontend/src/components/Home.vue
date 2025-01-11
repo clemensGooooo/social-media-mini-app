@@ -1,23 +1,43 @@
 <template>
-    <Navbar />
     <div class="main-container">
         <h2>Create a Post</h2>
+        <div class="image-upload">
+            <label for="imageUpload" class="upload-button">
+                Upload Image
+            </label>
+            <input type="file" id="imageUpload" accept="image/*" @change="handleImageUpload" style="display: none;" />
+            <div class="image-previews">
+                <div v-for="(image, index) in imagePreviews" :key="index" class="image-preview">
+                    <img :src="image.previewUrl" alt="Uploaded Image Preview" />
+                    <button @click="removeImage(index)" class="remove-button">
+                        X
+                    </button>
+                </div>
+            </div>
+        </div>
         <textarea v-model="content" placeholder="Write something..." rows="4"></textarea>
         <button @click="createPost" class="post-button">Create Post</button>
         <p v-if="error" class="error">{{ error }}</p>
-        <h2>Your last posts</h2>
+        <h2>Feed</h2>
         <div v-for="post in posts" :key="post.postId" class="post-card">
             <div class="post-header">
                 <img :src="post.users[0].profilePicture == 'none' ? image : post.users[0].profilePicture" alt="User Profile"
                     class="profile-img">
                 <h3 class="username">{{ post.users[0].username }}</h3>
             </div>
+    <!-- Image Viewer Section -->
+    <div v-if="post.mediaContent && post.mediaContent.length > 0">
+      <ImageViewer :images="post.mediaContent" />
+    </div>
+
             <p class="post-content" @click="openPost(post)">{{ post.content }}</p>
             <div class="post-footer">
                 <span>{{ post.date }}</span>
                 <div class="like-container">
                     <span class="likes-count">{{ post.likes.length }}</span>
-                    <button @click="toggleLike(post)" :class="{ 'liked': post.likes.find((user) => {console.log(user,username);return user.username == username}) ? true : false }" class="like-button">
+                    <button @click="toggleLike(post)"
+                        :class="{ 'liked': post.likes.find((user) => { return user.username == username }) ? true : false }"
+                        class="like-button">
                         <i class="like-icon"></i>
                     </button>
                 </div>
@@ -36,8 +56,8 @@
 </template>
   
 <script>
-import Navbar from './Navbar.vue';
 import image from "../assets/profile.png"
+import ImageViewer from './ImageViewer.vue';
 export default {
     data() {
         return {
@@ -47,6 +67,7 @@ export default {
             posts: [],
             image: image,
             username: '',
+            imagePreviews: [], // Array to hold preview URLs and files
         };
     },
     mounted() {
@@ -90,8 +111,17 @@ export default {
         }
     },
     methods: {
+        handleImageUpload(event) {
+            const files = Array.from(event.target.files); // Convert FileList to Array
+            files.forEach((file) => {
+                const previewUrl = URL.createObjectURL(file); // Generate preview URL
+                this.imagePreviews.push({ file, previewUrl }); // Add to previews array
+            });
+        },
+        removeImage(index) {
+            this.imagePreviews.splice(index, 1); // Remove image by index
+        },
         goToUser(username) {
-            console.log("Navigating to user:", username);
             this.$router.push({ name: 'user', params: { username: username } });
         },
         async createPost() {
@@ -99,22 +129,98 @@ export default {
                 this.error = 'Content cannot be empty!';
                 return;
             }
+            var re = new RegExp(/\n/, 'g');
+            const content = this.content.replaceAll(re, "\\n",).replace(/[^a-zA-Z0-9\' ]/g, "");
 
-            const mutation = `
+            const normal = `
         mutation CreatePost {
-          createPost(content: "${this.content}") {
+          createPost(content: "${content}") {
             postId
             error
           }
         }
       `;
-
+            const special = `
+        mutation CreatePost {
+            createPost(content: "${content}", isActivated: false) {
+                postId
+                error
+            }
+        }
+    `;
+            const payload = this.imagePreviews.length === 0 ? normal : special;
+            console.log(payload)
             const response = await fetch('http://localhost:4000/graphql', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${localStorage.getItem('authToken')}`,
 
+                },
+                body: JSON.stringify({
+                    query: payload,
+                }),
+            });
+
+            const { data } = await response.json();
+            const post = data.createPost;
+            if (post.error) {
+                this.error = post.error;
+            } else {
+                if (this.imagePreviews.length !== 0) {
+                    await this.uploadFilesSequentially(data.createPost.postId);
+                } else {
+                    this.content = ""
+                    this.fetchPosts()
+                }
+            }
+        },
+        async uploadFilesSequentially(postId) {
+            for (let i = 0; i < this.imagePreviews.length; i++) {
+                const imageObj = this.imagePreviews[i];
+                const formData = new FormData();
+
+                // Add current file to FormData
+                formData.append('file', imageObj.file);
+                formData.append('postId', postId); // Add the postId to associate the file with the post
+
+                // Upload file to /file/mediaUpload
+                const uploadResponse = await fetch('http://localhost:4000/file/mediaUpload', {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+                    },
+                    body: formData,
+                });
+
+                const uploadData = await uploadResponse.json();
+
+                if (uploadData.errors) {
+                    this.error = uploadData.errors[0].message;
+                    return; // If upload fails, stop the process and show the error
+                }
+            }
+
+            // After all files are uploaded, activate the post
+            await this.activatePost(postId);
+        },
+
+        // Activate the post after all files are uploaded
+        async activatePost(postId) {
+            const mutation = `
+        mutation ActivatePost {
+            activatePost(postId: "${postId}") {
+                success
+                error
+            }
+        }
+    `;
+
+            const response = await fetch('http://localhost:4000/graphql', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
                 },
                 body: JSON.stringify({
                     query: mutation,
@@ -126,12 +232,13 @@ export default {
             if (data.errors) {
                 this.error = data.errors[0].message;
             } else {
-                const post = data.data.createPost;
+                const post = data.data.activatePost;
                 if (post.error) {
                     this.error = post.error;
                 } else {
-                    this.content = '';
-                    this.fetchPosts()
+                    this.content = ''; // Clear the content after success
+                    this.imagePreviews = []; // Clear the previews
+                    this.fetchPosts(); // Fetch posts again
                 }
             }
         },
@@ -159,29 +266,29 @@ export default {
 
             const query_posts = `
           query {
-            getPosts(username: "${dataUser.getUser.username}") {
+            getNewestPosts {
+        error
+        posts {
+            content
+            date
+            postId
+            mediaContent
+            users {
+                username
                 error
-                posts {
-                    content
-                    date
-                    postId
-                    mediaContent
-                    users {
-                        username
-                        error
-                        profilePicture
-                        bio
-                        role
-                    }
-                    likes {
-                        username
-                        error
-                        profilePicture
-                        bio
-                        role
-                    }
-                }
+                profilePicture
+                bio
+                role
             }
+            likes {
+                username
+                error
+                profilePicture
+                bio
+                role
+            }
+        }
+    }
           }
         `;
             const response = await fetch('http://localhost:4000/graphql', {
@@ -195,11 +302,11 @@ export default {
             });
 
             const { data } = await response.json();
-            if (data.getPosts.error) {
-                this.error = data.getPosts.error;
+            if (data.getNewestPosts.error) {
+                this.error = data.getNewestPosts.error;
                 return;
             }
-            this.posts = data.getPosts.posts;
+            this.posts = data.getNewestPosts.posts;
         },
         async toggleLike(post) {
 
@@ -237,7 +344,9 @@ export default {
             this.$router.push({ name: 'post', params: { postId: post.postId } });
         }
     },
-    components: { Navbar }
+    components: {
+        ImageViewer
+    }
 };
 </script>
   
@@ -404,6 +513,7 @@ textarea:focus {
     color: #ffffff;
     /* Neutral, readable text */
     line-height: 1.6;
+    word-wrap: break-word;
     /* Better readability */
 }
 
@@ -467,6 +577,75 @@ textarea:focus {
 
 .like-button:active {
     transform: scale(0.95);
+}
+
+.upload-button {
+    display: inline-block;
+    padding: 10px 20px;
+    color: white;
+    border: 1px solid #4a148c;
+    cursor: pointer;
+    border-radius: 5px;
+    text-align: center;
+    width: 100%;
+}
+
+.upload-button:hover {
+    background-color: #790fcf;
+}
+
+.image-previews {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    /* Add spacing between previews */
+    margin-top: 20px;
+}
+
+.image-preview {
+    position: relative;
+    width: 200px;
+    /* Set consistent size for all images */
+    height: 200px;
+    /* Maintain square aspect ratio */
+    overflow: hidden;
+    /* Ensure the image fits inside */
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    /* Placeholder background for empty spaces */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-preview img {
+    width: 100%;
+    /* Scale the image to fit the container */
+    height: 100%;
+    object-fit: cover;
+    /* Crop the image to fill the space */
+}
+
+.remove-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(255, 0, 0, 0.8);
+    width: 30px;
+    height: 30px;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    padding: 8px;
+    font-size: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: background 0.3s ease;
+}
+
+.remove-button:hover {
+    background: rgba(255, 0, 0, 1);
 }
 </style>
   

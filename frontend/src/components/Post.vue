@@ -1,5 +1,4 @@
 <template>
-    <Navbar />
     <div class="post-container">
         <div v-if="loading" class="loading">Loading...</div>
         <div v-else>
@@ -72,7 +71,6 @@
     {{ }}
 </template>
 <script>
-import Navbar from '@/components/Navbar.vue';
 import axios from 'axios';
 
 export default {
@@ -92,7 +90,7 @@ export default {
         this.fetchPosts();
     },
     components: {
-        Navbar,
+
     },
     methods: {
         async fetchPosts() {
@@ -573,6 +571,7 @@ isLiked
     background-color: #4a148c;
     /* Darker purple for active state */
 }
+
 .master-post {
     margin-bottom: 50px;
 }

@@ -42,6 +42,7 @@ const schema = buildSchema(`
     getFollowers: [Followers]
     getPosts(username: String!): PostMultiple
     getPost(postId: String!): FullPost
+    getNewestPosts: PostMultiple
   }
 
   type Post {

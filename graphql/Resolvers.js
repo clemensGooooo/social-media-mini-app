@@ -380,6 +380,49 @@ const resolvers = {
             return { error: "Error retrieving posts" }
         }
     },
+    getNewestPosts: async (args, context) => {
+        if (context.auth.user !== "user") {
+            return { error: "You are not authorized to perform this action" };
+        }
+        const id = context.auth.id;
+        try {
+            const users = await User.find({ followers: { $in: id } });
+            const followers = users.map((user) => user._id);
+            const newestPosts = await Posts.find({$or: [{users: { $in: followers }}, {users: { $in: id }}] }).sort({ date: -1 }).limit(10);
+            const filteredPosts = newestPosts.map(async (post) => {
+                const creators = post.users.map(async (user) => {
+                    const user_r = await User.findById(user);
+                    return {
+                        username: user_r.username,
+                        bio: user_r.bio,
+                        role: user_r.role,
+                        profilePicture: user_r.profilePicture
+                    };
+                });
+                const likers = post.likes.map(async (user) => {
+                    const user_r = await User.findById(user);
+                    return {
+                        username: user_r.username,
+                        bio: user_r.bio,
+                        role: user_r.role,
+                        profilePicture: user_r.profilePicture
+                    };
+                });
+                return {
+                    content: post.content,
+                    users: creators,
+                    likes: likers,
+                    date: post.date,
+                    postId: post.postId,
+                    mediaContent: post.mediaContent
+                };
+            })
+            return {posts: filteredPosts};
+        } catch (err) {
+            console.log(err)
+            return { error: "Error retrieving newest posts" };
+        }
+    },
     likePost: async ({ postId, remove }, context) => {
         if (context.auth.user !== "user") {
             return { error: "You are not authorized to perform this action" };

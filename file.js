@@ -109,7 +109,7 @@ file.post('/profileUpload', upload.single('file'), async (req, res) => {
     }
 });
 
-file.post('/mediaUpload/BETA', upload.single('file'), async (req, res) => {
+file.post('/mediaUpload', upload.single('file'), async (req, res) => {
     req
     if (req.auth.user !== "user") {
         return res.status(400).send({ error: "You are not authorized to perform this action" });
@@ -139,7 +139,7 @@ file.post('/mediaUpload/BETA', upload.single('file'), async (req, res) => {
             'Content-Type': mimetype
         });
 
-        const url = `${process.env.BUCKET_URL}/${bucketNames[1]}/${uniqueFilename}`;
+        const url = `${process.env.BUCKET_URL}${bucketNames[1]}/${uniqueFilename}`;
 
         if (!post.mediaContent) {
             post.mediaContent = [];

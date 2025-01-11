@@ -1,12 +1,11 @@
 <template>
-    <Navbar />
     <div class="users-container">
         <h2>Your followers</h2>
         <p>You have {{ count }} follower(s).</p>
         <div v-if="requests.length != 0">
             <h4>You have a follower request</h4>
             <div v-for="user in requests" :key="user.username" class="user-card special">
-                <img :src="user.profilePicture" alt="Profile Picture" class="profile-picture" />
+                <img @click="goToUser(user)" :src="user.profilePicture == 'null' ? user.profilePicture : image" alt="Profile Picture" class="profile-picture" />
                 <div class="user-details">
                     <h3>{{ user.username }}</h3>
                     <p>{{ user.bio }}</p>
@@ -16,7 +15,7 @@
             </div>
         </div>
         <div v-for="user in users" :key="user.username" class="user-card" @click="goToUser(user.username)">
-            <img :src="user.profilePicture" alt="Profile Picture" class="profile-picture" />
+            <img :src="user.profilePicture == 'null' ? user.profilePicture : image" alt="Profile Picture" class="profile-picture" />
             <div class="user-details">
                 <h3>{{ user.username }}</h3>
                 <p>{{ user.bio }}</p>
@@ -28,8 +27,8 @@
 
   
 <script>
-import Navbar from './Navbar.vue';
 
+import image from '../assets/profile.png'
 export default {
     data() {
         return {
@@ -37,6 +36,7 @@ export default {
             requests: [],
             error: null,
             count: 0,
+            image: image
         };
     },
     async created() {
@@ -117,7 +117,6 @@ export default {
             }
         }
     },
-    components: { Navbar }
 };
 </script>
   

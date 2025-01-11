@@ -1,9 +1,8 @@
 <template>
-    <Navbar />
     <div class="profile-page">
         <div class="profile-card">
             <div class="profile-header">
-                <img :src="user.profilePicture || defaultProfilePicture" alt="Profile Picture" class="profile-picture" />
+                <img :src="user.profilePicture =='null'? profilePicture:  image" alt="Profile Picture" class="profile-picture" />
                 <h2>{{ user.firstName }} {{ user.lastName }}</h2>
                 <p class="role">{{ user.role }}</p>
                 <div v-if="user.bio" class="bio">
@@ -67,7 +66,7 @@
   
 <script>
 import axios from 'axios';
-import Navbar from './Navbar.vue';
+import image from "../assets/profile.png"
 
 export default {
     data() {
@@ -83,9 +82,9 @@ export default {
                 firstName: '',
                 bio: '',
             },
+            image: image,
             error: null,
             success: null,
-            defaultProfilePicture: '',
         };
     },
     async created() {
@@ -188,7 +187,6 @@ export default {
             }
         },
     },
-    components: { Navbar }
 };
 </script>
   

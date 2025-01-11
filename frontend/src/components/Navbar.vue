@@ -2,7 +2,10 @@
     <nav class="navbar">
         <div class="navbar-left">
             <button class="navbar-item" @click="home">Home</button>
-            <button class="navbar-item" @click="goToFollowers">Followers</button>
+            <button class="navbar-item" @click="goToFollowers">
+                Followers
+                <span v-if="followerCount >= 1">({{ followerCount }})</span>
+            </button>
         </div>
 
         <div class="navbar-right">
@@ -27,7 +30,8 @@ export default {
         return {
             profileImage: null, // Will hold the profile image URL
             image: image,
-            username: ""
+            username: "",
+            followerCount: 0,
         };
     },
     async created() {
@@ -53,6 +57,8 @@ export default {
             const { data } = await response.json();
             this.profileImage = data.getUser.profilePicture;
             this.username = data.getUser.username
+            this.followerCount = data.getUser.followerRequest
+
             if (this.profileImage == "none") {
                 this.profileImage = image
             }
@@ -75,7 +81,7 @@ export default {
             this.$router.push("/");
         },
         goToYourPosts() {
-            this.$router.push("/user/"+this.username);
+            this.$router.push("/user/" + this.username);
         }
     },
 };
@@ -135,6 +141,10 @@ export default {
     cursor: pointer;
     font-size: 1rem;
     text-transform: uppercase;
+}
+.navbar-item span {
+  font-weight: bold;
+  margin-left: 0.5rem;
 }
 </style>
   

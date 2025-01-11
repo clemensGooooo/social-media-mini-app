@@ -1,33 +1,53 @@
-<template>
-    <router-view />
-</template>
+
 
 <script>
+
+import Navbar from '@/components/Navbar.vue';
+
+
 export default {
     name: "App",
     mounted() {
         // Wait for route to resolve after mounting
         this.handleRouteChange();
+        window.addEventListener('storage', this.handleStorageChange);
+    },
+    beforeDestroy() {
+        // Clean up event listener
+        window.removeEventListener('storage', this.handleStorageChange);
     },
     watch: {
-        // React to route changes if necessary
         $route: 'handleRouteChange',
+    },
+    components: {
+        Navbar
+    },
+    data() {
+        return {
+            state: false
+        }
     },
     methods: {
         handleRouteChange() {
             const routeName = this.$route.name;
+            if (!routeName) return;
 
-            // Handle cases where the name might still be undefined
-            //if (!routeName) return;
-
-            /*if (routeName !== 'login' && routeName !== 'register') {
-                if (localStorage.getItem('authToken')) {
-                    this.$router.push({ name: 'home' });
-                } else {
+            if (!localStorage.getItem('authToken')) {
+                if (routeName !== 'login' && routeName !== 'register') {
                     this.$router.push({ name: 'login' });
                 }
-            }*/
-        },
+            }
+            if  (!localStorage.getItem('authToken')) {
+                this.state = false
+            } else {
+                this.state = true
+            }
+        }
     },
 };
 </script>
+<template>
+    <Navbar v-if="state" />
+
+    <router-view />
+</template>
