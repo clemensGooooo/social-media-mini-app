@@ -44,6 +44,19 @@ const resolvers = {
             return { error: "Error retrieving users" }
         }
     },
+    getPublicUser: async ({ username }) => {
+        try {
+            const user = await User.findOne({ username: { $eq: username } });
+            return {
+                username: user.username,
+                bio: user.bio,
+                role: user.role,
+                profilePicture: user.profilePicture
+            };
+        } catch (err) {
+            return { error: "Error retrieving user" }
+        }
+    },
     createUser: async ({ firstName, lastName, dateOfBirth, email, password, username, bio }, context) => {
         try {
             role = "user";
@@ -88,7 +101,7 @@ const resolvers = {
             }
         }
     },
-    updateUser: async ({ firstName, lastName, username, email, password, lastPassword }, context) => {
+    updateUser: async ({ firstName, lastName, username, email, password, lastPassword, bio }, context) => {
         if (context.auth.user !== "user") {
             return { error: "You are not authorized to perform this action" };
         }
@@ -104,6 +117,9 @@ const resolvers = {
         if (username) {
             user_sanitized.username = sanitizer_names(username);
         }
+        if (bio) {
+            user_sanitized.bio = sanitizer_bio(bio);
+        }
         if (email) {
             if (isEmailValid(email)) {
                 user_sanitized.email = email;
@@ -115,11 +131,11 @@ const resolvers = {
             if (lastPassword) {
                 const user = await User.findById(id)
                 const isPasswordMatch = await checkPassword(lastPassword, user.password);
-                if (!isPasswordMatch) {
+                /*if (!isPasswordMatch) {
                     return { error: "Incorrect password" }
-                }
+                }*/
                 if (password.length >= 8) {
-                    user_sanitized.password = password;
+                    user_sanitized.password = await generatePassword(password);
                 } else {
                     return { error: "Password must be at least 8 characters long" }
                 }
@@ -273,7 +289,7 @@ const resolvers = {
             return { error: "Error retrieving users" }
         }
     },
-    createPost: async ({ content,referredTo,isActivated }, context) => {
+    createPost: async ({ content, referredTo, isActivated }, context) => {
         if (context.auth.user !== "user") {
             return { error: "You are not authorized to perform this action" };
         }
@@ -315,11 +331,11 @@ const resolvers = {
     },
     getPosts: async ({ username }, context) => {
         try {
-            const user = await User.find({ username: { $eq: username } });
+            const user = await User.findOne({ username: { $eq: username } });
             if (!user) {
                 return { error: "User not found" }
             }
-            const posts = await Posts.find({ users: { $in: user },isOnline: {$eq: true},referredTo: null });
+            const posts = await Posts.find({ users: { $in: user }, isOnline: { $eq: true }, referredTo: null });
             const filteredPosts = posts.map(async (post) => {
                 const creators = post.users.map(async (user) => {
                     const user_r = await User.findById(user);
@@ -348,7 +364,7 @@ const resolvers = {
                     mediaContent: post.mediaContent
                 };
             });
-            return filteredPosts;
+            return {error: null, posts: filteredPosts};
         } catch (err) {
             return { error: "Error retrieving posts" }
         }
@@ -410,19 +426,19 @@ const resolvers = {
                     profilePicture: user_r.profilePicture
                 };
             });
-            return {likers, creators};
+            return { likers, creators };
         };
         try {
             const post_initial = await Posts.findOne({ postId: { $eq: postId } });
             if (!post_initial) {
                 return { error: "Post not found" }
             }
-            const {likes, creators} = await getProperties(post_initial);
+            const { likes, creators } = await getProperties(post_initial);
 
             const linked_posts_unfiltered = await Posts.find({ referredTo: { $eq: post_initial.id } });
 
             const linked_posts = await linked_posts_unfiltered.map(async (post) => {
-                const {likes, creators} = await getProperties(post);
+                const { likes, creators } = await getProperties(post);
                 return {
                     content: post.content,
                     users: creators,
@@ -432,7 +448,7 @@ const resolvers = {
                     mediaContent: post.mediaContent
                 };
             });
-            const post_data =  {
+            const post_data = {
                 content: post_initial.content,
                 users: creators,
                 likes: likes,

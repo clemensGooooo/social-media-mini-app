@@ -27,14 +27,19 @@ const schema = buildSchema(`
     role: String
     isFollowing: Boolean
   }
+  type PostMultiple {
+    error: String
+    posts: [Post]
+  }
   
   type Query {
     getUser: User
+    getPublicUser(username: String): PublicUser
     getUsers: [PublicUser]
     getFollowRequests: [PublicUser]
     getFollowerCount: Int
     getFollowers: [Followers]
-    getPosts(username: String!): [Post]
+    getPosts(username: String!): PostMultiple
     getPost(postId: String!): FullPost
   }
 
@@ -78,7 +83,7 @@ const schema = buildSchema(`
 
   type Mutation {
     createUser(username: String!, firstName: String!,lastName: String!,bio: String!,dateOfBirth: String!, email: String!, password: String!): CreateUserResponse
-    updateUser(username: String, email: String, password: String,lastPassword: String,lastName: String): UpdateUserResponse
+    updateUser(username: String, email: String, password: String,lastPassword: String,lastName: String,bio: String): UpdateUserResponse
     login(username: String, email: String, password: String!): LoginResponse
     deleteUser: UpdateUserResponse
     requestFollow(username: String!): UpdateUserResponse

@@ -5,6 +5,7 @@ const schema = require("./graphql/Schema");
 const resolvers = require("./graphql/Resolvers");
 const { auth } = require("./auth");
 const file = require("./file");
+const cors = require('cors')
 
 mongoose.connect("mongodb://localhost:27017/purple", {
 });
@@ -13,7 +14,11 @@ mongoose.connection.once("open", () => {
 });
 
 var app = express()
+let corsOptions = {
+  origin : ['http://localhost:5173'],
+}
 
+app.use(cors(corsOptions))
 app.use(auth)
 
 app.use("/file", file)
