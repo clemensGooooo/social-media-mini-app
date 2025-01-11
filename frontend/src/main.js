@@ -8,7 +8,6 @@ import Profile from './components/Profile.vue'
 import Home from './components/Home.vue'
 import Followers from './components/Followers.vue'
 import Post from './components/Post.vue'
-
 import './assets/base.css'
 
 const routes = [
@@ -26,6 +25,7 @@ const routes = [
     routes,
   })
 
-createApp(App).use(router).mount('#app')
+const app = createApp(App).use(router).mount('#app')
+
 
 export default router

@@ -53,7 +53,7 @@
 import axios from 'axios';
 import image from "../assets/profile.png"
 import ImageViewer from './ImageViewer.vue';
-
+import config from '../config'
 
 export default {
     data() {
@@ -112,7 +112,7 @@ export default {
             }
             `;
 
-            const response = await fetch('http://localhost:4000/graphql', {
+            const response = await fetch(config.graphqlUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -144,7 +144,7 @@ isLiked
 }
 `;
 
-            const response = await fetch('http://localhost:4000/graphql', {
+            const response = await fetch(config.graphqlUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -173,7 +173,7 @@ isLiked
     }
 }
         `;
-            const response = await axios.post('http://localhost:4000/graphql', {
+            const response = await axios.post(config.graphqlUrl, {
                 query: mutation,
             }, {
                 headers: {
@@ -199,7 +199,7 @@ isLiked
 }
 `;
 
-            const response = await fetch('http://localhost:4000/graphql', {
+            const response = await fetch(config.graphqlUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

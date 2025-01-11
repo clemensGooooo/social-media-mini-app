@@ -16,6 +16,11 @@
                         </svg>
                     </button>
                 </div>
+                <!-- Image Viewer Section -->
+                <div v-if="post.mediaContent && post.mediaContent.length > 0">
+                    <ImageViewer :images="post.mediaContent" />
+                </div>
+
                 <p class="post-content">{{ post.content }}</p>
                 <div class="post-footer" @click="">
                     <span>{{ post.date }}</span>
@@ -72,6 +77,9 @@
 </template>
 <script>
 import axios from 'axios';
+import ImageViewer from './ImageViewer.vue';
+import config from '@/config';
+
 
 export default {
     data() {
@@ -90,7 +98,7 @@ export default {
         this.fetchPosts();
     },
     components: {
-
+ImageViewer
     },
     methods: {
         async fetchPosts() {
@@ -145,7 +153,7 @@ export default {
 
             `;
 
-            const response = await fetch('http://localhost:4000/graphql', {
+            const response = await fetch(config.graphqlUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -178,7 +186,7 @@ isLiked
 }
 `;
 
-            const response = await fetch('http://localhost:4000/graphql', {
+            const response = await fetch(config.graphqlUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -207,7 +215,7 @@ isLiked
     }
 }
         `;
-            const response = await axios.post('http://localhost:4000/graphql', {
+            const response = await axios.post(config.graphqlUrl, {
                 query: mutation,
             }, {
                 headers: {
@@ -233,7 +241,7 @@ isLiked
 }
 `;
 
-            const response = await fetch('http://localhost:4000/graphql', {
+            const response = await fetch(config.graphqlUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -268,7 +276,7 @@ isLiked
         }
       `;
 
-            const response = await fetch('http://localhost:4000/graphql', {
+            const response = await fetch(config.graphqlUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

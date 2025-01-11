@@ -39,11 +39,11 @@ const checkFileType = (file, cb) => {
 }
 
 const minioClient = new Minio.Client({
-    endPoint: 'localhost',
-    port: 9000,
+    endPoint: process.env.BUCKET_SERVER,
+    port: process.env.BUCKET_SERVER_PORT,
     useSSL: false,
-    accessKey: 'minioadmin',
-    secretKey: 'minioadmin'
+    accessKey: process.env.accessKey,
+    secretKey: process.env.secretKey,
 });
 
 // Ensure the buckets exist
@@ -53,7 +53,7 @@ const bucketNames = [process.env.BUCKET_NAME, 'posts'];
     for (const bucketName of bucketNames) {
         const bucketExists = await minioClient.bucketExists(bucketName).catch(() => false);
         if (!bucketExists) {
-            await minioClient.makeBucket(bucketName, 'here');
+            await minioClient.makeBucket('profile-pictures', 'here');
             console.log(`Bucket "${bucketName}" created successfully.`);
         }
         const policy = {

@@ -1,34 +1,38 @@
 <template>
     <div class="main-container">
-        <h2>Create a Post</h2>
-        <div class="image-upload">
-            <label for="imageUpload" class="upload-button">
-                Upload Image
-            </label>
-            <input type="file" id="imageUpload" accept="image/*" @change="handleImageUpload" style="display: none;" />
-            <div class="image-previews">
-                <div v-for="(image, index) in imagePreviews" :key="index" class="image-preview">
-                    <img :src="image.previewUrl" alt="Uploaded Image Preview" />
-                    <button @click="removeImage(index)" class="remove-button">
-                        X
-                    </button>
+        <div class="post-card">
+            <div class="post-header">
+                <h3 class="username">You: {{ username }}</h3>
+            </div>
+            <textarea v-model="content" placeholder="Write something..." rows="4"></textarea>
+            <div class="image-upload">
+                <label for="imageUpload" class="upload-button">
+                    Upload Image
+                </label>
+                <input type="file" id="imageUpload" accept="image/*" @change="handleImageUpload" style="display: none;" />
+                <div class="image-previews">
+                    <div v-for="(image, index) in imagePreviews" :key="index" class="image-preview">
+                        <img :src="image.previewUrl" alt="Uploaded Image Preview" />
+                        <button @click="removeImage(index)" class="remove-button">
+                            X
+                        </button>
+                    </div>
                 </div>
             </div>
+            <button @click="createPost" class="post-button">Create Post</button>
+            <p v-if="error" class="error">{{ error }}</p>
         </div>
-        <textarea v-model="content" placeholder="Write something..." rows="4"></textarea>
-        <button @click="createPost" class="post-button">Create Post</button>
-        <p v-if="error" class="error">{{ error }}</p>
-        <h2>Feed</h2>
+
         <div v-for="post in posts" :key="post.postId" class="post-card">
             <div class="post-header">
                 <img :src="post.users[0].profilePicture == 'none' ? image : post.users[0].profilePicture" alt="User Profile"
                     class="profile-img">
                 <h3 class="username">{{ post.users[0].username }}</h3>
             </div>
-    <!-- Image Viewer Section -->
-    <div v-if="post.mediaContent && post.mediaContent.length > 0">
-      <ImageViewer :images="post.mediaContent" />
-    </div>
+            <!-- Image Viewer Section -->
+            <div v-if="post.mediaContent && post.mediaContent.length > 0">
+                <ImageViewer :images="post.mediaContent" />
+            </div>
 
             <p class="post-content" @click="openPost(post)">{{ post.content }}</p>
             <div class="post-footer">
@@ -56,18 +60,19 @@
 </template>
   
 <script>
+import config from "@/config";
 import image from "../assets/profile.png"
 import ImageViewer from './ImageViewer.vue';
 export default {
     data() {
         return {
-            users: [], // Will hold the fetched users
-            error: null, // For any errors during the fetch
+            users: [],
+            error: null,
             content: '',
             posts: [],
             image: image,
             username: '',
-            imagePreviews: [], // Array to hold preview URLs and files
+            imagePreviews: [],
         };
     },
     mounted() {
@@ -89,7 +94,7 @@ export default {
         }
       `;
         try {
-            const response = await fetch("http://localhost:4000/graphql", {
+            const response = await fetch(config.graphqlUrl, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -149,8 +154,8 @@ export default {
         }
     `;
             const payload = this.imagePreviews.length === 0 ? normal : special;
-            console.log(payload)
-            const response = await fetch('http://localhost:4000/graphql', {
+
+            const response = await fetch(config.graphqlUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -185,7 +190,7 @@ export default {
                 formData.append('postId', postId); // Add the postId to associate the file with the post
 
                 // Upload file to /file/mediaUpload
-                const uploadResponse = await fetch('http://localhost:4000/file/mediaUpload', {
+                const uploadResponse = await fetch(config.image_upload, {
                     method: 'POST',
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem('authToken')}`,
@@ -216,7 +221,7 @@ export default {
         }
     `;
 
-            const response = await fetch('http://localhost:4000/graphql', {
+            const response = await fetch(config.graphqlUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -252,7 +257,7 @@ export default {
                 }
             }
         `;
-            const response_username = await fetch('http://localhost:4000/graphql', {
+            const response_username = await fetch(config.graphqlUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -291,7 +296,7 @@ export default {
     }
           }
         `;
-            const response = await fetch('http://localhost:4000/graphql', {
+            const response = await fetch(config.graphqlUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -320,7 +325,7 @@ export default {
 }
       `;
 
-            const response = await fetch('http://localhost:4000/graphql', {
+            const response = await fetch(config.graphqlUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -333,7 +338,7 @@ export default {
             });
 
             const { data } = await response.json();
-            console.log(data.likePost.isLiked, post.postId)
+
             if (data.likePost.error) {
                 this.error = data.likePost.error;
             } else {
@@ -351,21 +356,27 @@ export default {
 </script>
   
 <style scoped>
+/* User Card */
 .user-card {
     cursor: pointer;
     display: flex;
-    gap: 1rem;
+    gap: 1.2rem;
     align-items: center;
-    padding: 1rem;
-    border: 1px solid #272323;
+    padding: 1.2rem;
+    border: 1px solid #272727;
     border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    background: #131212;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    background: #121212;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.user-card:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
 }
 
 .profile-picture {
-    width: 64px;
-    height: 64px;
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
     object-fit: cover;
 }
@@ -376,46 +387,47 @@ export default {
 
 .user-details h3 {
     margin: 0 0 0.5rem;
-    font-size: 1.2rem;
-    color: #cfcfcf;
+    font-size: 1.3rem;
+    color: #e0e0e0;
+    font-family: 'Poppins', sans-serif;
 }
 
 .user-details p {
     margin: 0;
     font-size: 1rem;
-    color: #666;
+    color: #9e9e9e;
+    font-family: 'Roboto', sans-serif;
 }
 
 .role {
     display: inline-block;
     margin-top: 0.5rem;
-    padding: 0.2rem 0.5rem;
-    font-size: 0.85rem;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.9rem;
     color: #fff;
-    background: #007bff;
-    border-radius: 4px;
+    background: #6a1b9a;
+    border-radius: 6px;
+    font-weight: 500;
 }
 
+/* Main Container */
 .main-container {
-    margin: 10px;
+    margin: 2rem auto;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    margin: 2rem auto;
     max-width: 1000px;
-    padding: 1rem;
+    padding: 2rem;
     box-sizing: border-box;
-    background-color: #000000;
-    border-radius: 8px;
+    background-color: #181818;
+    border-radius: 12px;
     width: 100%;
-    margin: 0 auto;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    margin-top: 50px;
+    box-shadow: 0 16px 16px rgba(0, 0, 0, 0.5);
 }
 
 h2 {
-    color: #6a1b9a;
-    font-size: 1.5em;
+    color: #8e24aa;
+    font-size: 2rem;
     text-align: center;
     margin-bottom: 10px;
 }
@@ -424,15 +436,15 @@ textarea {
     width: 100%;
     padding: 15px;
     border: 1px solid #2b2a33;
-    border-radius: 10px;
+    border-radius: 12px;
     background-color: #2b2a33;
     font-size: 1.1em;
     resize: none;
     box-sizing: border-box;
     transition: all 0.3s ease;
-    margin-bottom: 10px;
     outline: none;
-    color: white;
+    color: #fff;
+    margin-bottom: 5px;
 }
 
 textarea:focus {
@@ -440,52 +452,44 @@ textarea:focus {
     box-shadow: 0 0 10px rgba(142, 36, 170, 0.3);
 }
 
-
+/* Post Button */
 .post-button {
     background-color: #8e24aa;
     color: white;
     border: none;
-    padding: 10px 20px;
-    border-radius: 4px;
-    font-size: 1em;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-size: 1.1em;
     width: 100%;
-    margin-top: 10px;
     cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
 .post-button:hover {
     background-color: #7b1fa2;
 }
 
+/* Post Card */
 .post-card {
-    background-color: #080808;
-    /* White for contrast */
+    background-color: #0d0d0d;
     border-radius: 12px;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
-    /* Soft shadow */
-    border: solid 1px #242429;
-    /* Subtle border */
+    border: solid 1px #2c2c2c;
     margin-bottom: 25px;
     padding: 20px;
-    color: #b3b3b3;
-    /* Deep purple */
+    color: #e0e0e0;
     font-family: 'Roboto', sans-serif;
     transition: transform 0.2s, box-shadow 0.2s;
-    /* Smooth hover effects */
 }
 
 .post-card:hover {
-    transform: scale(1.02);
-    /* Slight zoom on hover */
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-    /* Enhanced shadow on hover */
 }
 
 .post-header {
     display: flex;
     align-items: center;
-    border-bottom: 1px solid #e0e0e0;
-    /* Divider between header and content */
+    border-bottom: 1px solid #3e3e3e;
     padding-bottom: 10px;
     margin-bottom: 10px;
 }
@@ -495,49 +499,43 @@ textarea:focus {
     height: 50px;
     border-radius: 50%;
     border: 2px solid #6a1b9a;
-    /* Add border for a polished look */
     margin-right: 15px;
 }
 
 .username {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     font-weight: bold;
-    color: #4a148c;
+    color: #6a1b9a;
     font-family: 'Poppins', sans-serif;
-    /* Stylish font */
 }
 
 .post-content {
     margin-top: 15px;
-    font-size: 1.2rem;
-    color: #ffffff;
-    /* Neutral, readable text */
+    font-size: 1.1rem;
+    color: #fff;
     line-height: 1.6;
     word-wrap: break-word;
-    /* Better readability */
 }
 
 .divider {
     height: 1px;
-    background-color: #e0e0e0;
-    /* Subtle divider between sections */
+    background-color: #3e3e3e;
     margin: 20px 0;
 }
 
+/* Like Button */
 .like-container {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-family: Arial, sans-serif;
+    gap: 10px;
 }
 
 .likes-count {
     font-size: 14px;
-    color: #555;
+    color: #b3b3b3;
 }
 
 .like-button {
-    position: relative;
     background: none;
     border: none;
     cursor: pointer;
@@ -555,7 +553,6 @@ textarea:focus {
     width: 20px;
     height: 20px;
     background-image: url('https://cdn-icons-png.flaticon.com/512/833/833472.png');
-    /* Heart Icon */
     background-size: cover;
     filter: grayscale(100%);
     transition: transform 0.3s ease, filter 0.3s ease;
@@ -579,41 +576,38 @@ textarea:focus {
     transform: scale(0.95);
 }
 
+/* Upload Button */
 .upload-button {
-    display: inline-block;
-    padding: 10px 20px;
+    padding: 7px 24px;
     color: white;
-    border: 1px solid #4a148c;
+    border: 1px solid #8e24aa;
     cursor: pointer;
-    border-radius: 5px;
+    border-radius: 6px;
     text-align: center;
     width: 100%;
+    transition: background-color 0.3s ease;
 }
 
 .upload-button:hover {
     background-color: #790fcf;
 }
 
+/* Image Previews */
 .image-previews {
     display: flex;
     flex-wrap: wrap;
-    gap: 15px;
-    /* Add spacing between previews */
+    gap: 20px;
     margin-top: 20px;
 }
 
 .image-preview {
     position: relative;
     width: 200px;
-    /* Set consistent size for all images */
     height: 200px;
-    /* Maintain square aspect ratio */
     overflow: hidden;
-    /* Ensure the image fits inside */
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    background-color: #f9f9f9;
-    /* Placeholder background for empty spaces */
+    border: 1px solid #444;
+    border-radius: 8px;
+    background-color: #2b2b2b;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -621,10 +615,8 @@ textarea:focus {
 
 .image-preview img {
     width: 100%;
-    /* Scale the image to fit the container */
     height: 100%;
     object-fit: cover;
-    /* Crop the image to fill the space */
 }
 
 .remove-button {

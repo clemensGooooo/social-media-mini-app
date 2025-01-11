@@ -55,7 +55,7 @@ export default {
     }
 }
       `;
-            const response = await fetch("http://localhost:4000/graphql", {
+            const response = await fetch(config.graphqlUrl, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -93,7 +93,7 @@ export default {
         }
       `;
             try {
-                const response = await fetch("http://localhost:4000/graphql", {
+                const response = await fetch(config.graphqlUrl, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",

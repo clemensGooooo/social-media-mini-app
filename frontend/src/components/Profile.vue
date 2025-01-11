@@ -67,6 +67,7 @@
 <script>
 import axios from 'axios';
 import image from "../assets/profile.png"
+import config from '@/config';
 
 export default {
     data() {
@@ -108,7 +109,7 @@ export default {
           }
         `;
             try {
-                const response = await axios.post('http://localhost:4000/graphql', {
+                const response = await axios.post(config.graphqlUrl, {
                     query
                 }, {
                     headers: {
@@ -164,7 +165,7 @@ export default {
           }
         `;
             try {
-                const response = await axios.post('http://localhost:4000/graphql', {
+                const response = await axios.post(config.graphqlUrl, {
                     query: mutation,
                     variables: { input: updatedFields },
                 }, {

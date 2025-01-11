@@ -17,6 +17,7 @@
 </template>
 
 <script>
+import config from '@/config';
 import axios from 'axios';
 
 export default {
@@ -52,7 +53,7 @@ export default {
       };
 
       try {
-        const response = await axios.post('http://localhost:4000/graphql', {
+        const response = await axios.post(config.graphqlUrl, {
           query,
           variables,
         });

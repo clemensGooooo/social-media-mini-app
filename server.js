@@ -7,7 +7,7 @@ const { auth } = require("./auth");
 const file = require("./file");
 const cors = require('cors')
 
-mongoose.connect("mongodb://localhost:27017/purple", {
+mongoose.connect(process.env.MONGODBURL, {
 });
 mongoose.connection.once("open", () => {
   console.log("Connected to MongoDB");
