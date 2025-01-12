@@ -90,7 +90,7 @@ file.post('/profileUpload', upload.single('file'), async (req, res) => {
             'Content-Type': mimetype
         });
 
-        const url = `${process.env.BUCKET_URL}/${bucketNames[0]}/${uniqueFilename}`;
+        const url = `${process.env.BUCKET_URL}${bucketNames[0]}/${uniqueFilename}`;
 
         const user = await User.findById(id);
         if (user.profilePicture) {

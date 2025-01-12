@@ -63,6 +63,10 @@ export default {
             if (this.profileImage == "none") {
                 this.profileImage = image
             }
+            if (data.getUser.username == null) {
+                localStorage.removeItem("authToken");
+                window.location.reload()
+            }
         } catch (err) {
             console.error("Error fetching profile image:", err);
         }

@@ -4,8 +4,7 @@
         <div v-if="loading" class="loading">Loading...</div>
         <div v-else>
             <div class="profile-section">
-                <img :src="user.profilePicture == 'null' ? user.profilePicture : image" alt="Profile Picture"
-                    class="profile-picture" />
+                <img :src="image" alt="Profile Picture" class="profile-picture" />
                 <h1 class="username">{{ user.username }}</h1>
                 <p class="bio">{{ user.bio }}</p>
                 <p class="role">Role: {{ user.role }}</p>
@@ -54,6 +53,7 @@ import axios from 'axios';
 import image from "../assets/profile.png"
 import ImageViewer from './ImageViewer.vue';
 import config from '../config'
+import { getDataGraphQL } from '@/assets/dataProvider';
 
 export default {
     data() {
@@ -112,26 +112,17 @@ export default {
             }
             `;
 
-            const response = await fetch(config.graphqlUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
 
-                },
-                body: JSON.stringify({ query: query }),
-            });
-
-            const { data } = await response.json();
-            if (data.getPosts.error) {
-                this.error = data.getPosts.error;
-                this.loading = false;
-                return;
-            }
-            this.user = data.getPublicUser
-            this.username = data.getUser.username
-            this.posts = data.getPosts.posts;
+            const { response, error } = await getDataGraphQL(query);
             this.loading = false;
+            if (error) this.error = error
+            else {
+                this.user = response.getPublicUser
+                this.image = response.getPublicUser.profilePicture
+                this.username = response.getUser.username
+                this.posts = response.getPosts.posts;
+                this.loading = false;
+            }
         },
         async toggleLike(post) {
             const mutation = `

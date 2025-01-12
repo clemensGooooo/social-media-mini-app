@@ -2,13 +2,21 @@
     <div class="profile-page">
         <div class="profile-card">
             <div class="profile-header">
-                <img :src="user.profilePicture =='null'? profilePicture:  image" alt="Profile Picture" class="profile-picture" />
+                <label for="profileImage" class="profile-image-label">
+                    <img :src="image" alt="Profile Picture" class="profile-picture" title="Upload profile image" />
+                </label>
+                <input 
+                    type="file" 
+                    id="profileImage" 
+                    @change="handleImageUpload" 
+                    accept="image/*" 
+                    class="image-upload-input hidden"
+                />
                 <h2>{{ user.firstName }} {{ user.lastName }}</h2>
                 <p class="role">{{ user.role }}</p>
                 <div v-if="user.bio" class="bio">
                     <p>{{ user.bio }}</p>
                 </div>
-
             </div>
 
             <div class="profile-body">
@@ -68,6 +76,7 @@
 import axios from 'axios';
 import image from "../assets/profile.png"
 import config from '@/config';
+import { getDataGraphQL } from '@/assets/dataProvider';
 
 export default {
     data() {
@@ -81,7 +90,7 @@ export default {
                 lastName: '',
                 dateOfBirth: '',
                 firstName: '',
-                bio: '',
+                bio: ''
             },
             image: image,
             error: null,
@@ -92,6 +101,30 @@ export default {
         await this.fetchUser();
     },
     methods: {
+        async handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const response = await axios.post("http://localhost:4000/file/profileUpload", formData, {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                        Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+
+                    }
+                });
+
+                if (response.data && response.data.url) {
+                    this.image = response.data.url;
+                    this.success = "Image uploaded successfully!";
+                }
+            } catch (error) {
+                this.error = "Failed to upload image.";
+            }
+        },
         async fetchUser() {
             const query = `
           query {
@@ -108,26 +141,12 @@ export default {
             }
           }
         `;
-            try {
-                const response = await axios.post(config.graphqlUrl, {
-                    query
-                }, {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-                    }
-                });
-                const { data } = response.data;
-                if (data.getUser.error) {
-                    this.error = data.getUser.error;
-                }
-                else {
-                    this.user = data.getUser;
-                    this.initializeFormData();
-                }
-            }
-            catch (err) {
-                this.error = 'Failed to fetch user data.';
-            }
+            const { response, error } = await getDataGraphQL(query)
+            if (error) this.error = error;
+
+            this.user = response.getUser;
+            this.image = response.getUser.profilePicture;
+            this.initializeFormData();
         },
         initializeFormData() {
             this.formData = {
@@ -192,6 +211,17 @@ export default {
 </script>
   
 <style scoped>
+
+.image-upload-input.hidden {
+    display: none;
+}
+.image-upload-input {
+    margin-top: 20px;
+    display: block;
+    width: 50%;
+    text-align: center;
+}
+
 .profile-page {
     display: flex;
     justify-content: center;
@@ -218,6 +248,7 @@ export default {
     width: 100px;
     height: 100px;
     margin-bottom: 10px;
+    cursor: pointer;
 }
 
 .role {
@@ -242,7 +273,8 @@ label {
     color: #4b0082;
 }
 
-input, textarea {
+input,
+textarea {
     width: 100%;
     padding: 8px;
     border: 1px solid #2b2a33;
@@ -251,6 +283,7 @@ input, textarea {
     background-color: #2b2a33;
     color: #f8f8fb;
 }
+
 .update-button {
     background-color: #8a2be2;
     color: white;

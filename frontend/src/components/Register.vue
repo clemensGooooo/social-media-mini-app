@@ -106,7 +106,6 @@ export default {
     justify-content: center;
     height: 90vh;
     width: 100%;
-    background-color: #f0f8ff;
     /* Light blue background */
     font-family: Arial, sans-serif;
 }
@@ -123,7 +122,7 @@ export default {
     max-width: 400px;
     display: flex;
     flex-direction: column;
-    background-color: #fff;
+    background-color: #000000;
     padding: 2rem;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -149,9 +148,11 @@ export default {
     font-size: 1rem;
     padding: 0.75rem;
     margin-bottom: 1.5rem;
-    border: 1px solid #b0c4de;
+    border: 1px solid #535c68;
     /* Subtle blue border */
     border-radius: 4px;
+    background-color: #000000;
+    color: #fff;
     outline: none;
     transition: border-color 0.3s, box-shadow 0.3s;
 }

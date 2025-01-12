@@ -63,6 +63,8 @@
 import config from "@/config";
 import image from "../assets/profile.png"
 import ImageViewer from './ImageViewer.vue';
+import { getDataGraphQL } from "@/assets/dataProvider";
+
 export default {
     data() {
         return {
@@ -93,27 +95,11 @@ export default {
     }
         }
       `;
-        try {
-            const response = await fetch(config.graphqlUrl, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-                },
-                body: JSON.stringify({ query }),
-            });
-            const { data, errors } = await response.json();
-            if (errors) {
-                this.error = errors[0]?.message || "An error occurred.";
-            }
-            else {
-                this.users = data.getUsers;
-                this.username = data.getUser.username;
-            }
-        }
-        catch (err) {
-            this.error = err.message;
-        }
+        const { response, error } = await getDataGraphQL(query)
+        if (error != null) this.error = error;
+        this.users = response.getUsers;
+        this.username = response.getUser.username;
+
     },
     methods: {
         handleImageUpload(event) {
@@ -221,30 +207,12 @@ export default {
         }
     `;
 
-            const response = await fetch(config.graphqlUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-                },
-                body: JSON.stringify({
-                    query: mutation,
-                }),
-            });
-
-            const data = await response.json();
-
-            if (data.errors) {
-                this.error = data.errors[0].message;
-            } else {
-                const post = data.data.activatePost;
-                if (post.error) {
-                    this.error = post.error;
-                } else {
-                    this.content = ''; // Clear the content after success
-                    this.imagePreviews = []; // Clear the previews
-                    this.fetchPosts(); // Fetch posts again
-                }
+            const { response, error } = await getDataGraphQL(mutation)
+            if (error != null) this.error = error;
+            else {
+                this.content = '';
+                this.imagePreviews = [];
+                this.fetchPosts();
             }
         },
         async fetchPosts() {
