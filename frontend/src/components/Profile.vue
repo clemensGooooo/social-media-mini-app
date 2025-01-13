@@ -145,6 +145,7 @@ export default {
             if (error) this.error = error;
 
             this.user = response.getUser;
+            if (response.getUser.profilePicture != "none")
             this.image = response.getUser.profilePicture;
             this.initializeFormData();
         },

@@ -31,7 +31,7 @@
                 <div v-if="post.mediaContent && post.mediaContent.length > 0">
                     <ImageViewer :images="post.mediaContent" />
                 </div>
-                <p class="post-content" @click="openPost(post)">{{ post.content }}</p>
+                <div class="post-content" v-html="markdown.render(post.content)"></div>
                 <div class="post-footer" @click="">
                     <span>{{ post.date }}</span>
                     <div class="like-container">
@@ -40,6 +40,11 @@
                             :class="{ 'liked': post.likes.find((user) => { console.log(user, username); return user.username == username }) ? true : false }"
                             class="like-button">
                             <i class="like-icon"></i>
+                        </button>
+                    </div>
+                    <div class="goToPost-container">
+                        <button class="goToPost" @click="openPost(post)">
+                            Comment & More
                         </button>
                     </div>
                 </div>
@@ -54,7 +59,9 @@ import image from "../assets/profile.png"
 import ImageViewer from './ImageViewer.vue';
 import config from '../config'
 import { getDataGraphQL } from '@/assets/dataProvider';
+import markdownit from 'markdown-it'
 
+const markdown = markdownit().disable(['image'])
 export default {
     data() {
         return {
@@ -65,7 +72,8 @@ export default {
             followButtonText: 'Follow Request',
             isFollowButtonDisabled: false,
             username: '',
-            image: image
+            image: image,
+            markdown: markdown
         };
     },
     mounted() {
@@ -118,7 +126,8 @@ export default {
             if (error) this.error = error
             else {
                 this.user = response.getPublicUser
-                this.image = response.getPublicUser.profilePicture
+                if (response.getPublicUser.profilePicture != "none")
+                    this.image = response.getPublicUser.profilePicture
                 this.username = response.getUser.username
                 this.posts = response.getPosts.posts;
                 this.loading = false;
@@ -292,6 +301,7 @@ isLiked
 .profile-img {
     width: 50px;
     height: 50px;
+    min-height: 50px;
     border-radius: 50%;
     border: 2px solid #6a1b9a;
     /* Add border for a polished look */
@@ -502,6 +512,31 @@ isLiked
 
 .delete-post-button:active {
     transform: scale(0.95);
+}
+
+.post-footer {
+    position: relative;
+    /* Makes the div the positioning reference */
+
+}
+
+.goToPost {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    padding: 5px 20px;
+    background-color: transparent;
+    color: #7700ff;
+    border: 2px solid #7700ff;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.goToPost:hover {
+    background-color: #7700ff;
+    color: #fff;
 }
 </style>
   

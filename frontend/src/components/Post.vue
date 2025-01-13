@@ -21,7 +21,7 @@
                     <ImageViewer :images="post.mediaContent" />
                 </div>
 
-                <p class="post-content">{{ post.content }}</p>
+                <div class="post-content" v-html="markdown.render(post.content)"></div>
                 <div class="post-footer" @click="">
                     <span>{{ post.date }}</span>
                     <div class="like-container">
@@ -58,7 +58,7 @@
                         </svg>
                     </button>
                 </div>
-                <p class="post-content">{{ post.content }}</p>
+                <div class="post-content" v-html="markdown.render(post.content)"></div>
                 <div class="post-footer" @click="">
                     <span>{{ post.date }}</span>
                     <div class="like-container">
@@ -79,6 +79,9 @@
 import axios from 'axios';
 import ImageViewer from './ImageViewer.vue';
 import config from '@/config';
+import markdownit from 'markdown-it'
+
+const markdown = markdownit().disable(['image'])
 
 
 export default {
@@ -91,7 +94,8 @@ export default {
             isFollowButtonDisabled: false,
             username: '',
             post: {},
-            content: ""
+            content: "",
+            markdown: markdown
         };
     },
     mounted() {
@@ -267,9 +271,10 @@ isLiked
                 return;
             }
 
+            const content = btoa(this.content)
             const mutation = `
         mutation CreatePost {
-          createPost(content: "${this.content}",referredTo: "${this.post.postId}") {
+          createPost(content: "${content}",referredTo: "${this.post.postId}") {
             postId
             error
           }
@@ -352,9 +357,9 @@ isLiked
 }
 
 .post-card:hover {
-    transform: scale(1.02);
     /* Slight zoom on hover */
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 16px rgba(100, 100, 100, 0.3);
+    border-color: rgb(43, 41, 41);
     /* Enhanced shadow on hover */
 }
 

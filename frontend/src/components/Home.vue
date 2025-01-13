@@ -71,6 +71,9 @@ import ImageViewer from './ImageViewer.vue';
 import { getDataGraphQL } from "@/assets/dataProvider";
 import markdownit from 'markdown-it'
 
+const markdown = markdownit().disable(['image'])
+
+
 export default {
     data() {
         return {
@@ -81,7 +84,7 @@ export default {
             image: image,
             username: '',
             imagePreviews: [],
-            markdown: markdownit()
+            markdown: markdown
         };
     },
     mounted() {
