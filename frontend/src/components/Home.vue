@@ -34,7 +34,7 @@
                 <ImageViewer :images="post.mediaContent" />
             </div>
 
-            <p class="post-content" @click="openPost(post)">{{ post.content }}</p>
+            <div class="post-content" v-html="markdown.render(post.content)" ></div>
             <div class="post-footer">
                 <span>{{ post.date }}</span>
                 <div class="like-container">
@@ -43,6 +43,11 @@
                         :class="{ 'liked': post.likes.find((user) => { return user.username == username }) ? true : false }"
                         class="like-button">
                         <i class="like-icon"></i>
+                    </button>
+                </div>
+                <div class="goToPost-container">
+                    <button class="goToPost"  @click="openPost(post)">
+                        Comment & More
                     </button>
                 </div>
             </div>
@@ -64,6 +69,7 @@ import config from "@/config";
 import image from "../assets/profile.png"
 import ImageViewer from './ImageViewer.vue';
 import { getDataGraphQL } from "@/assets/dataProvider";
+import markdownit from 'markdown-it'
 
 export default {
     data() {
@@ -75,6 +81,7 @@ export default {
             image: image,
             username: '',
             imagePreviews: [],
+            markdown: markdownit()
         };
     },
     mounted() {
@@ -121,7 +128,7 @@ export default {
                 return;
             }
             var re = new RegExp(/\n/, 'g');
-            const content = this.content.replaceAll(re, "\\n",).replace(/[^a-zA-Z0-9\' ]/g, "");
+            const content = btoa(this.content);
 
             const normal = `
         mutation CreatePost {
@@ -378,20 +385,6 @@ export default {
     font-weight: 500;
 }
 
-/* Main Container */
-.main-container {
-    margin: 2rem auto;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    max-width: 1000px;
-    padding: 2rem;
-    box-sizing: border-box;
-    background-color: #181818;
-    border-radius: 12px;
-    width: 100%;
-    box-shadow: 0 16px 16px rgba(0, 0, 0, 0.5);
-}
 
 h2 {
     color: #8e24aa;
@@ -607,5 +600,30 @@ textarea:focus {
 .remove-button:hover {
     background: rgba(255, 0, 0, 1);
 }
+
+.post-footer {
+    position: relative; /* Makes the div the positioning reference */
+
+}
+
+.goToPost {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    padding: 5px 20px;
+    background-color: transparent;
+    color: #7700ff;
+    border: 2px solid #7700ff;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.goToPost:hover {
+    background-color: #7700ff;
+    color: #fff;
+}
+
 </style>
   

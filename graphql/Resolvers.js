@@ -1,6 +1,6 @@
 const User = require("../models/User");
 const { generateJWT } = require("../auth");
-const { sanitizer_names, isEmailValid, sanitizer_bio, sanitizer_markdown } = require("../controllers/sanitizer");
+const { sanitizer_names, isEmailValid, sanitizer_bio } = require("../controllers/sanitizer");
 const { generatePassword, checkPassword } = require("../controllers/password");
 const Posts = require("../models/Posts");
 const crypto = require("crypto");
@@ -31,7 +31,7 @@ const resolvers = {
     },
     getUsers: async (context) => {
         try {
-            const users = await User.find();
+            const users = await User.aggregate([{ $sample: { size: 10 } }]);
             const filteredUsers = users.map(user => {
                 return {
                     username: user.username,
@@ -57,6 +57,24 @@ const resolvers = {
         } catch (err) {
             return { error: "Error retrieving user" }
         }
+    },
+    searchUsers: async ({ query }, context) => {
+        if (context.auth.user !== "user") {
+            return { error: "You are not authorized to perform this action" };
+        }
+        if (query.length < 2) {
+            return { error: "Please make the input longer than two characters" };
+        }
+        const matching_users = await User.find({ username: { $regex: query, $options: 'i' } });
+        const filteredUsers = matching_users.map(user => {
+            return {
+                username: user.username,
+                bio: user.bio,
+                role: user.role,
+                profilePicture: user.profilePicture
+            };
+        });
+        return filteredUsers
     },
     createUser: async ({ firstName, lastName, dateOfBirth, email, password, username, bio }, context) => {
         try {
@@ -310,7 +328,7 @@ const resolvers = {
             }
 
             const post = {
-                content: sanitizer_markdown(content),
+                content: atob(content),
                 likes: [],
                 users: [id],
                 date: new Date().toISOString(),
@@ -388,7 +406,7 @@ const resolvers = {
         try {
             const users = await User.find({ followers: { $in: id } });
             const followers = users.map((user) => user._id);
-            const newestPosts = await Posts.find({$or: [{users: { $in: followers }}, {users: { $in: id }}] }).sort({ date: -1 }).limit(10);
+            const newestPosts = await Posts.find({ $or: [{ users: { $in: followers } }, { users: { $in: id } }] }).sort({ date: -1 }).limit(10);
             const filteredPosts = newestPosts.map(async (post) => {
                 const creators = post.users.map(async (user) => {
                     const user_r = await User.findById(user);
@@ -417,7 +435,7 @@ const resolvers = {
                     mediaContent: post.mediaContent
                 };
             })
-            return {posts: filteredPosts};
+            return { posts: filteredPosts };
         } catch (err) {
             console.log(err)
             return { error: "Error retrieving newest posts" };
@@ -503,9 +521,9 @@ const resolvers = {
                 return { error: "Post not found" }
             }
             const { likes, creators } = await getProperties(post_initial);
-            
+
             const linked_posts_unfiltered = await Posts.find({ referredTo: { $eq: post_initial.id } });
-            
+
             const linked_posts = await linked_posts_unfiltered.map(async (post) => {
                 const { likes, creators } = await getProperties(post);
                 return {

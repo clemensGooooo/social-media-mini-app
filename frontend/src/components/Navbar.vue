@@ -6,6 +6,7 @@
                 Followers
                 <span v-if="followerCount >= 1">({{ followerCount }})</span>
             </button>
+            <button class="navbar-item" @click="goToSearch">Search</button>
         </div>
 
         <div class="navbar-right">
@@ -72,6 +73,9 @@ export default {
         }
     },
     methods: {
+        goToSearch() {
+            this.$router.push("/search");
+        },
         goToFollowers() {
             this.$router.push("/followers");
         },

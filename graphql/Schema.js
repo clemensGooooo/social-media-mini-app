@@ -43,6 +43,7 @@ const schema = buildSchema(`
     getPosts(username: String!): PostMultiple
     getPost(postId: String!): FullPost
     getNewestPosts: PostMultiple
+    searchUsers(query: String): [PublicUser]
   }
 
   type Post {

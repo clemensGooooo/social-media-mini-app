@@ -8,6 +8,7 @@ import Profile from './components/Profile.vue'
 import Home from './components/Home.vue'
 import Followers from './components/Followers.vue'
 import Post from './components/Post.vue'
+import Search from './components/Search.vue'
 import './assets/base.css'
 
 const routes = [
@@ -18,6 +19,7 @@ const routes = [
     { path: '/user/:username', component: User,name: 'user' },
     { path: '/post/:postId', component: Post,name: 'post' },
     { path: '/followers', component: Followers,name: 'followers' },
+    { path: '/search', component: Search,name: 'search' },
   ]
   
   const router = createRouter({

@@ -10,11 +10,5 @@ const isEmailValid = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
 }
-const sanitizer_markdown = (input) => {
-    // BETA
-    const htmlRegex = /<[^>]*>/g;
-    input = input.replace(htmlRegex, '');
 
-    return input;
-}
-module.exports = { sanitizer_names, isEmailValid,sanitizer_bio,sanitizer_markdown };
+module.exports = { sanitizer_names, isEmailValid,sanitizer_bio };
