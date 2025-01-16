@@ -1,3 +1,12 @@
+Some impressions.
+
+![](docs/login.png)
+
+And the main page.
+
+![](docs/test.png)
+
+
 This is a small GraphQL project (**Backend/Frontend**), creating a demo social media app oriented on Twitter. The main reason for building that is practice GraphQL/Vue.JS.
 
 The GraphQL part does all the essential parts of the social media app like handling login/data fetching/modifying, the `/file` API handles the file upload process.

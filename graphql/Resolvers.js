@@ -406,7 +406,14 @@ const resolvers = {
         try {
             const users = await User.find({ followers: { $in: id } });
             const followers = users.map((user) => user._id);
-            const newestPosts = await Posts.find({ $or: [{ users: { $in: followers } }, { users: { $in: id } }] }).sort({ date: -1 }).limit(10);
+            const newestPosts = await Posts.find({
+                $and: [{
+                    $or: [{ users: { $in: followers } },
+                    { users: { $in: id } }]
+                },
+                { referredTo: null }]
+            }).sort({ date: -1 }).limit(10);
+
             const filteredPosts = newestPosts.map(async (post) => {
                 const creators = post.users.map(async (user) => {
                     const user_r = await User.findById(user);

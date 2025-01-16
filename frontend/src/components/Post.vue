@@ -1,11 +1,15 @@
 <template>
     <div class="post-container">
+        <ErrorBox :message="error" @close="clearError" />
         <div v-if="loading" class="loading">Loading...</div>
+        <div v-else-if="error">
+            <ErrorBox :message="error" @close="clearError" />
+        </div>
         <div v-else>
-            <div v-if="error" class="error-box">{{ error }}</div>
             <div class="master-post">
                 <div class="post-header">
-                    <img :src="post.users[0].profilePicture" alt="User Profile" class="profile-img">
+                    <img :src="post.users[0].profilePicture == 'none' ? image : post.users[0].profilePicture"
+                        alt="User Profile" class="profile-img">
                     <h3 class="username">{{ post.users[0].username }}</h3>
                     <button v-if="post.users.find((user) => user.username == username)" @click="deletePost(post)"
                         class="delete-post-button" title="Delete Post">
@@ -47,7 +51,8 @@
             </div>
             <div v-for="post in posts" :key="post.postId" class="post-card">
                 <div class="post-header">
-                    <img :src="post.users[0].profilePicture" alt="User Profile" class="profile-img">
+                    <img :src="post.users[0].profilePicture == 'none' ? image : post.users[0].profilePicture"
+                        alt="User Profile" class="profile-img">
                     <h3 class="username">{{ post.users[0].username }}</h3>
                     <button v-if="post.users.find((user) => user.username == username)" @click="deletePost(post)"
                         class="delete-post-button" title="Delete Post">
@@ -76,10 +81,12 @@
     {{ }}
 </template>
 <script>
-import axios from 'axios';
 import ImageViewer from './ImageViewer.vue';
 import config from '@/config';
 import markdownit from 'markdown-it'
+import image from '@/assets/profile.png'
+import ErrorBox from './ErrorBox.vue';
+import { getDataGraphQL } from '@/assets/dataProvider';
 
 const markdown = markdownit().disable(['image'])
 
@@ -95,16 +102,21 @@ export default {
             username: '',
             post: {},
             content: "",
-            markdown: markdown
+            markdown: markdown,
+            image: image
         };
     },
     mounted() {
         this.fetchPosts();
     },
     components: {
-ImageViewer
+        ImageViewer,
+        ErrorBox
     },
     methods: {
+        clearError() {
+            this.error = null;
+        },
         async fetchPosts() {
             const postId = this.$route.params.postId
             const query = `
@@ -157,26 +169,16 @@ ImageViewer
 
             `;
 
-            const response = await fetch(config.graphqlUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            const { response, error } = await getDataGraphQL(query)
 
-                },
-                body: JSON.stringify({ query: query }),
-            });
-
-            const { data } = await response.json();
-            if (data.getPost.error) {
-                this.error = data.getPost.error;
-                this.loading = false;
-                return;
+            if (error || response.getPost.error != null) {
+                this.error = error || response.getPost.error;
+                console.log(this.error)
+            } else {
+                this.posts = response.getPost.linked_posts
+                this.post = response.getPost
+                this.username = response.getUser.username
             }
-            this.posts = data.getPost.linked_posts
-            this.post = data.getPost
-            this.username = data.getUser.username
-
             this.loading = false;
         },
         async toggleLike(post) {
@@ -190,49 +192,12 @@ isLiked
 }
 `;
 
-            const response = await fetch(config.graphqlUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            const { error } = await getDataGraphQL(mutation)
 
-                },
-                body: JSON.stringify({
-                    query: mutation,
-                }),
-            });
-
-            const { data } = await response.json();
-
-            if (data.likePost.error) {
-                this.error = data.likePost.error;
+            if (error) {
+                this.error = error;
             } else {
                 this.fetchPosts()
-            }
-        },
-        async followRequest() {
-            const mutation = `
-            mutation RequestFollow {
-    requestFollow(username: "${this.$route.params.username}") {
-        success
-        error
-    }
-}
-        `;
-            const response = await axios.post(config.graphqlUrl, {
-                query: mutation,
-            }, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-                }
-            });
-            const { data } = response.data;
-            if (data.requestFollow.error) {
-                this.error = data.requestFollow.error;
-            }
-            else if (data.requestFollow.success) {
-                this.followButtonText = 'Follow Requested';  // Change the button text
-                this.isFollowButtonDisabled = true;  // Disable the button
             }
         },
         async deletePost(post) {
@@ -245,22 +210,9 @@ isLiked
 }
 `;
 
-            const response = await fetch(config.graphqlUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-
-                },
-                body: JSON.stringify({
-                    query: mutation,
-                }),
-            });
-
-            const { data } = await response.json();
-
-            if (data.deletePost.error) {
-                this.error = data.deletePost.error;
+            const { response, error } = await getDataGraphQL(mutation)
+            if (error || response.deletePost.error) {
+                this.error = response.deletePost.error;
             } else {
                 this.fetchPosts()
             }
@@ -281,30 +233,13 @@ isLiked
         }
       `;
 
-            const response = await fetch(config.graphqlUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            const { response, error } = await getDataGraphQL(mutation)
 
-                },
-                body: JSON.stringify({
-                    query: mutation,
-                }),
-            });
-
-            const data = await response.json();
-
-            if (data.errors) {
-                this.error = data.errors[0].message;
+            if (error) {
+                this.error = error
             } else {
-                const post = data.data.createPost;
-                if (post.error) {
-                    this.error = post.error;
-                } else {
-                    this.content = '';
-                    this.fetchPosts()
-                }
+                this.content = '';
+                this.fetchPosts()
             }
         },
 
@@ -452,18 +387,6 @@ isLiked
 
 .like-button:active {
     transform: scale(0.95);
-}
-
-.error-box {
-    background-color: #160b0c;
-    color: #b17b80;
-    border: 1px solid #5c1219;
-    padding: 10px;
-    border-radius: 5px;
-    position: relative;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 
 .username {

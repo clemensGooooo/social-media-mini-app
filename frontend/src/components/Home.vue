@@ -6,20 +6,15 @@
             </div>
             <textarea v-model="content" placeholder="Write something..." rows="4"></textarea>
             <div class="image-upload">
-                <label for="imageUpload" class="upload-button">
+                <input type="file" id="imageUpload" accept="image/*" @change="handleImageUpload" style="display: none;" />
+                <ImagePreviewsC :imagePreviews="imagePreviews" @remove="removeImage" />
+            </div>
+            <div class="post-buttons">
+                <label for="imageUpload" class="upload-btn">
                     Upload Image
                 </label>
-                <input type="file" id="imageUpload" accept="image/*" @change="handleImageUpload" style="display: none;" />
-                <div class="image-previews">
-                    <div v-for="(image, index) in imagePreviews" :key="index" class="image-preview">
-                        <img :src="image.previewUrl" alt="Uploaded Image Preview" />
-                        <button @click="removeImage(index)" class="remove-button">
-                            X
-                        </button>
-                    </div>
-                </div>
+                <button @click="createPost" class="create-post-btn">Create Post</button>
             </div>
-            <button @click="createPost" class="post-button">Create Post</button>
             <p v-if="error" class="error">{{ error }}</p>
         </div>
 
@@ -34,7 +29,7 @@
                 <ImageViewer :images="post.mediaContent" />
             </div>
 
-            <div class="post-content" v-html="markdown.render(post.content)" ></div>
+            <div class="post-content" v-html="markdown.render(post.content)"></div>
             <div class="post-footer">
                 <span>{{ post.date }}</span>
                 <div class="like-container">
@@ -46,7 +41,7 @@
                     </button>
                 </div>
                 <div class="goToPost-container">
-                    <button class="goToPost"  @click="openPost(post)">
+                    <button class="goToPost" @click="openPost(post)">
                         Comment & More
                     </button>
                 </div>
@@ -70,6 +65,7 @@ import image from "../assets/profile.png"
 import ImageViewer from './ImageViewer.vue';
 import { getDataGraphQL } from "@/assets/dataProvider";
 import markdownit from 'markdown-it'
+import ImagePreviewsC from './ImagePreviewsC.vue'
 
 const markdown = markdownit().disable(['image'])
 
@@ -92,19 +88,19 @@ export default {
     },
     async created() {
         const query = `
-        query GetUsers {
-          getUsers {
-            username
-            error
-            profilePicture
-            bio
-            role
-          },
-          getUser {
-        username
-    }
-        }
-      `;
+            query GetUsers {
+                getUsers {
+                    username
+                    error
+                    profilePicture
+                    bio
+                    role
+                },
+                getUser {
+                    username
+                }
+            }
+        `;
         const { response, error } = await getDataGraphQL(query)
         if (error != null) this.error = error;
         this.users = response.getUsers;
@@ -113,14 +109,14 @@ export default {
     },
     methods: {
         handleImageUpload(event) {
-            const files = Array.from(event.target.files); // Convert FileList to Array
+            const files = Array.from(event.target.files);
             files.forEach((file) => {
-                const previewUrl = URL.createObjectURL(file); // Generate preview URL
-                this.imagePreviews.push({ file, previewUrl }); // Add to previews array
+                const previewUrl = URL.createObjectURL(file);
+                this.imagePreviews.push({ file, previewUrl });
             });
         },
         removeImage(index) {
-            this.imagePreviews.splice(index, 1); // Remove image by index
+            this.imagePreviews.splice(index, 1);
         },
         goToUser(username) {
             this.$router.push({ name: 'user', params: { username: username } });
@@ -134,42 +130,30 @@ export default {
             const content = btoa(this.content);
 
             const normal = `
-        mutation CreatePost {
-          createPost(content: "${content}") {
-            postId
-            error
-          }
-        }
-      `;
+                mutation CreatePost {
+                    createPost(content: "${content}") {
+                        postId
+                        error
+                    }
+                }
+            `;
             const special = `
-        mutation CreatePost {
-            createPost(content: "${content}", isActivated: false) {
-                postId
-                error
-            }
-        }
-    `;
+                mutation CreatePost {
+                    createPost(content: "${content}", isActivated: false) {
+                        postId
+                        error
+                    }
+                }
+            `;
             const payload = this.imagePreviews.length === 0 ? normal : special;
 
-            const response = await fetch(config.graphqlUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-
-                },
-                body: JSON.stringify({
-                    query: payload,
-                }),
-            });
-
-            const { data } = await response.json();
-            const post = data.createPost;
+            const { error, response } = await getDataGraphQL(payload)
+            const post = response.createPost;
             if (post.error) {
                 this.error = post.error;
             } else {
                 if (this.imagePreviews.length !== 0) {
-                    await this.uploadFilesSequentially(data.createPost.postId);
+                    await this.uploadFilesSequentially(response.createPost.postId);
                 } else {
                     this.content = ""
                     this.fetchPosts()
@@ -181,11 +165,9 @@ export default {
                 const imageObj = this.imagePreviews[i];
                 const formData = new FormData();
 
-                // Add current file to FormData
                 formData.append('file', imageObj.file);
-                formData.append('postId', postId); // Add the postId to associate the file with the post
+                formData.append('postId', postId);
 
-                // Upload file to /file/mediaUpload
                 const uploadResponse = await fetch(config.image_upload, {
                     method: 'POST',
                     headers: {
@@ -198,24 +180,22 @@ export default {
 
                 if (uploadData.errors) {
                     this.error = uploadData.errors[0].message;
-                    return; // If upload fails, stop the process and show the error
+                    return;
                 }
             }
 
-            // After all files are uploaded, activate the post
             await this.activatePost(postId);
         },
 
-        // Activate the post after all files are uploaded
         async activatePost(postId) {
             const mutation = `
-        mutation ActivatePost {
-            activatePost(postId: "${postId}") {
-                success
-                error
-            }
-        }
-    `;
+                mutation ActivatePost {
+                    activatePost(postId: "${postId}") {
+                        success
+                        error
+                    }
+                }
+            `;
 
             const { response, error } = await getDataGraphQL(mutation)
             if (error != null) this.error = error;
@@ -226,114 +206,150 @@ export default {
             }
         },
         async fetchPosts() {
-            const quer_self = `
-            query GetUser {
-                getUser {
-                    profilePicture
-                    username
-                    error
-                }
-            }
-        `;
-            const response_username = await fetch(config.graphqlUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-
-                },
-                body: JSON.stringify({ query: quer_self }),
-            });
-
-            const { data: dataUser } = await response_username.json();
 
             const query_posts = `
-          query {
-            getNewestPosts {
-        error
-        posts {
-            content
-            date
-            postId
-            mediaContent
-            users {
-                username
-                error
-                profilePicture
-                bio
-                role
-            }
-            likes {
-                username
-                error
-                profilePicture
-                bio
-                role
-            }
-        }
-    }
-          }
+                query {
+                    getNewestPosts {
+                        error
+                        posts {
+                            content
+                            date
+                            postId
+                            mediaContent
+                            users {
+                                username
+                                error
+                                profilePicture
+                                bio
+                                role
+                            }
+                            likes {
+                                username
+                                error
+                                profilePicture
+                                bio
+                                role
+                            }
+                        }
+                    }
+                    getUser {
+                            profilePicture
+                            username
+                            error
+                        }
+                }
         `;
-            const response = await fetch(config.graphqlUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-
-                },
-                body: JSON.stringify({ query: query_posts }),
-            });
-
-            const { data } = await response.json();
-            if (data.getNewestPosts.error) {
-                this.error = data.getNewestPosts.error;
+            const { response, error } = await getDataGraphQL(query_posts)
+            if (error) {
+                this.error = error;
                 return;
             }
-            this.posts = data.getNewestPosts.posts;
+            this.posts = response.getNewestPosts.posts;
         },
         async toggleLike(post) {
 
             const mutation = `
-            mutation LikePost {
-    likePost(postId: "${post.postId}") {
-        success
-        error
-        isLiked
-    }
-}
-      `;
+                mutation LikePost {
+                    likePost(postId: "${post.postId}") {
+                        success
+                        error
+                        isLiked
+                    }
+                }
+            `;
 
-            const response = await fetch(config.graphqlUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-
-                },
-                body: JSON.stringify({
-                    query: mutation,
-                }),
-            });
-
-            const { data } = await response.json();
-
-            if (data.likePost.error) {
-                this.error = data.likePost.error;
-            } else {
-                this.fetchPosts()
+            const { error } = await getDataGraphQL(mutation)
+            if (error) {
+                this.error = error;
+                return;
             }
+            this.fetchPosts()
         },
         openPost(post) {
             this.$router.push({ name: 'post', params: { postId: post.postId } });
         }
     },
     components: {
-        ImageViewer
+        ImageViewer,
+        ImagePreviewsC
     }
 };
 </script>
   
 <style scoped>
+
+.post-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+/* Upload button */
+.upload-btn {
+    background: transparent;
+    color: #8A2BE2;
+    border: 2px solid #8A2BE2;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.upload-btn:hover {
+    background: #8A2BE2;
+    color: white;
+}
+
+/* Create post button */
+.create-post-btn {
+    background: #8A2BE2;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+}
+
+.create-post-btn:hover {
+    background: #a855f7;
+    box-shadow: 0 0 10px rgba(138, 43, 226, 0.8);
+}
+
+/* Upload button */
+.upload-btn {
+    background: transparent;
+    color: #8A2BE2;
+    border: 2px solid #8A2BE2;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.upload-btn:hover {
+    background: #8A2BE2;
+    color: white;
+}
+
+/* Create post button */
+.create-post-btn {
+    background: #8A2BE2;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+}
+
+.create-post-btn:hover {
+    background: #a855f7;
+    box-shadow: 0 0 10px rgba(138, 43, 226, 0.8);
+}
+
 /* User Card */
 .user-card {
     cursor: pointer;
@@ -414,23 +430,6 @@ textarea {
 textarea:focus {
     border-color: #8e24aa;
     box-shadow: 0 0 10px rgba(142, 36, 170, 0.3);
-}
-
-/* Post Button */
-.post-button {
-    background-color: #8e24aa;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 6px;
-    font-size: 1.1em;
-    width: 100%;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.post-button:hover {
-    background-color: #7b1fa2;
 }
 
 /* Post Card */
@@ -540,72 +539,9 @@ textarea:focus {
     transform: scale(0.95);
 }
 
-/* Upload Button */
-.upload-button {
-    padding: 7px 24px;
-    color: white;
-    border: 1px solid #8e24aa;
-    cursor: pointer;
-    border-radius: 6px;
-    text-align: center;
-    width: 100%;
-    transition: background-color 0.3s ease;
-}
-
-.upload-button:hover {
-    background-color: #790fcf;
-}
-
-/* Image Previews */
-.image-previews {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    margin-top: 20px;
-}
-
-.image-preview {
-    position: relative;
-    width: 200px;
-    height: 200px;
-    overflow: hidden;
-    border: 1px solid #444;
-    border-radius: 8px;
-    background-color: #2b2b2b;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.image-preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.remove-button {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    background: rgba(255, 0, 0, 0.8);
-    width: 30px;
-    height: 30px;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    padding: 8px;
-    font-size: 12px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    transition: background 0.3s ease;
-}
-
-.remove-button:hover {
-    background: rgba(255, 0, 0, 1);
-}
-
 .post-footer {
-    position: relative; /* Makes the div the positioning reference */
+    position: relative;
+    /* Makes the div the positioning reference */
 
 }
 
@@ -627,6 +563,5 @@ textarea:focus {
     background-color: #7700ff;
     color: #fff;
 }
-
 </style>
   
