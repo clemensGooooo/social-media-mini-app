@@ -21,7 +21,7 @@
         <div v-for="post in posts" :key="post.postId" class="post-card">
             <div class="post-header">
                 <img :src="post.users[0].profilePicture == 'none' ? image : post.users[0].profilePicture" alt="User Profile"
-                    class="profile-img">
+                    class="profile-img" @click="goToUser(post.users[0].username)">
                 <h3 class="username">{{ post.users[0].username }}</h3>
             </div>
             <!-- Image Viewer Section -->
@@ -31,7 +31,7 @@
 
             <div class="post-content" v-html="markdown.render(post.content)"></div>
             <div class="post-footer">
-                <span>{{ post.date }}</span>
+                <span>{{ formatTime(post.date) }}</span>
                 <div class="like-container">
                     <span class="likes-count">{{ post.likes.length }}</span>
                     <button @click="toggleLike(post)"
@@ -108,6 +108,19 @@ export default {
 
     },
     methods: {
+        formatTime(timestamp)  {
+            const now = new Date();
+            const time = new Date(timestamp);
+            const diffInSeconds = Math.floor((now - time) / 1000);
+
+            if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
+            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+            if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return time.toLocaleDateString(undefined, options);
+        },
         handleImageUpload(event) {
             const files = Array.from(event.target.files);
             files.forEach((file) => {
@@ -277,7 +290,6 @@ export default {
 </script>
   
 <style scoped>
-
 .post-buttons {
     display: flex;
     justify-content: space-between;
@@ -458,6 +470,7 @@ textarea:focus {
 }
 
 .profile-img {
+    cursor: pointer;
     width: 50px;
     height: 50px;
     border-radius: 50%;

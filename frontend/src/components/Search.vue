@@ -34,15 +34,15 @@ export default {
         async searchOnChange() {
             const query = `
             query SearchUsers {
-    searchUsers(query: "${this.query}") {
-        username
-        error
-        profilePicture
-        bio
-        role
-    }
-}
-      `;
+                searchUsers(query: "${this.query}") {
+                    username
+                    error
+                    profilePicture
+                    bio
+                    role
+                }
+            }
+            `;
             if (query.length < 2) {
                 return
             }

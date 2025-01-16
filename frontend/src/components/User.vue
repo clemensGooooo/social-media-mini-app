@@ -33,7 +33,7 @@
                 </div>
                 <div class="post-content" v-html="markdown.render(post.content)"></div>
                 <div class="post-footer" @click="">
-                    <span>{{ post.date }}</span>
+                    <span>{{ formatTime(post.date) }}</span>
                     <div class="like-container">
                         <span class="likes-count">{{ post.likes.length }}</span>
                         <button @click="toggleLike(post)"
@@ -80,6 +80,19 @@ export default {
         this.fetchPosts();
     },
     methods: {
+        formatTime(timestamp)  {
+            const now = new Date();
+            const time = new Date(timestamp);
+            const diffInSeconds = Math.floor((now - time) / 1000);
+
+            if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
+            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+            if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return time.toLocaleDateString(undefined, options);
+        },
         async fetchPosts() {
             const username = this.$route.params.username
             const query = `
@@ -283,8 +296,6 @@ isLiked
 }
 
 .post-card:hover {
-    transform: scale(1.02);
-    /* Slight zoom on hover */
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
     /* Enhanced shadow on hover */
 }
