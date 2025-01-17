@@ -8,9 +8,7 @@
                 <h1 class="username">{{ user.username }}</h1>
                 <p class="bio">{{ user.bio }}</p>
                 <p class="role">Role: {{ user.role }}</p>
-                <button v-if="username != user.username" class="follow-button" @click="followRequest"
-                    :disabled="isFollowButtonDisabled">{{ followButtonText
-                    }}</button>
+                <Follow :user="user" :username="username" @clicked="fetchPosts" />
             </div>
             <div v-if="error" class="error-box">{{ error }}</div>
             <div v-for="post in posts" :key="post.postId" class="post-card">
@@ -54,9 +52,9 @@
     {{ }}
 </template>
 <script>
-import axios from 'axios';
 import image from "../assets/profile.png"
-import ImageViewer from './ImageViewer.vue';
+import Follow from '../components/Follow.vue';
+import ImageViewer from '../components/ImageViewer.vue';
 import config from '../config'
 import { getDataGraphQL } from '@/assets/dataProvider';
 import markdownit from 'markdown-it'
@@ -69,8 +67,6 @@ export default {
             posts: [],
             loading: true,
             error: null,
-            followButtonText: 'Follow Request',
-            isFollowButtonDisabled: false,
             username: '',
             image: image,
             markdown: markdown
@@ -80,7 +76,7 @@ export default {
         this.fetchPosts();
     },
     methods: {
-        formatTime(timestamp)  {
+        formatTime(timestamp) {
             const now = new Date();
             const time = new Date(timestamp);
             const diffInSeconds = Math.floor((now - time) / 1000);
@@ -98,16 +94,17 @@ export default {
             const query = `
             query GetPublicUser {
                 getPublicUser(username: "${username}") {
-                username
-                error
-                profilePicture
-                bio
-                role
+                    username
+                    error
+                    profilePicture
+                    bio
+                    role
+                    followed
                 }
                 getUser {
-        username
-    }
-    getPosts(username: "${username}") {
+                    username
+            }
+            getPosts(username: "${username}") {
                 error
                 posts {
                     content
@@ -177,40 +174,15 @@ isLiked
                 this.fetchPosts()
             }
         },
-        async followRequest() {
-            const mutation = `
-            mutation RequestFollow {
-    requestFollow(username: "${this.$route.params.username}") {
-        success
-        error
-    }
-}
-        `;
-            const response = await axios.post(config.graphqlUrl, {
-                query: mutation,
-            }, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-                }
-            });
-            const { data } = response.data;
-            if (data.requestFollow.error) {
-                this.error = data.requestFollow.error;
-            }
-            else if (data.requestFollow.success) {
-                this.followButtonText = 'Follow Requested';  // Change the button text
-                this.isFollowButtonDisabled = true;  // Disable the button
-            }
-        },
         async deletePost(post) {
             const mutation = `
             mutation DeletePost {
-    deletePost(postId: "${post.postId}") {
-        success
-        error
-    }
-}
-`;
+                deletePost(postId: "${post.postId}") {
+                    success
+                    error
+                }
+            }
+            `;
 
             const response = await fetch(config.graphqlUrl, {
                 method: 'POST',
@@ -237,7 +209,8 @@ isLiked
         }
     },
     components: {
-        ImageViewer
+        ImageViewer,
+        Follow
     }
 };
 </script>
@@ -437,47 +410,6 @@ isLiked
 .role {
     font-size: 1em;
     font-style: italic;
-}
-
-.follow-button {
-    background-color: #6a1b9a;
-    /* Purple background */
-    color: white;
-    /* White text */
-    border: none;
-    /* Remove default border */
-    padding: 12px 24px;
-    /* Add padding for size */
-    font-size: 16px;
-    /* Set font size */
-    border-radius: 30px;
-    /* Rounded corners */
-    cursor: pointer;
-    /* Pointer cursor on hover */
-    transition: background-color 0.3s ease, transform 0.2s;
-    /* Smooth transitions */
-}
-
-.follow-button:hover {
-    background-color: #8e24aa;
-    /* Lighter purple on hover */
-    transform: scale(1.05);
-    /* Slightly enlarge the button */
-}
-
-.follow-button:active {
-    background-color: #4a0072;
-    /* Darker purple when clicked */
-    transform: scale(0.98);
-    /* Slightly shrink on click */
-}
-
-.follow-button.disabled {
-    background-color: #ccc;
-    /* Light gray background */
-    cursor: not-allowed;
-    /* Disable pointer cursor */
-
 }
 
 .delete-post-button {

@@ -28,6 +28,7 @@
   
 <script>
 
+import { getDataGraphQL } from '@/assets/dataProvider';
 import image from '../assets/profile.png'
 export default {
     data() {
@@ -49,24 +50,16 @@ export default {
         async acceptFollow(user) {
             const query = `
             mutation AcceptFollow {
-    acceptFollow(username: "${user.username}") {
-        success
-        error
-    }
-}
-      `;
-            const response = await fetch(config.graphqlUrl, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-                },
-                body: JSON.stringify({ query }),
-            });
-            const { data } = await response.json();
-            console.log(data)
-            if (data.acceptFollow.error) {
-                this.error = errors[0]?.message || "An error occurred.";
+                acceptFollow(username: "${user.username}") {
+                    success
+                    error
+                }
+            }
+            `;
+            const {error} = await getDataGraphQL(query)
+
+            if (error) {
+                this.error = error;
             }
             else {
                 this.fetchFollowers()
@@ -74,41 +67,33 @@ export default {
         },
         async fetchFollowers() {
             const query = `
-        query GetUsers {
-            getFollowers {
-        username
-        error
-        profilePicture
-        bio
-        role
-        isFollowing
-    }
-    getFollowRequests {
-        username
-        error
-        profilePicture
-        bio
-        role
-    }
-        }
-      `;
+            query GetUsers {
+                getFollowers {
+                    username
+                    error
+                    profilePicture
+                    bio
+                    role
+                    isFollowing
+                }
+                getFollowRequests {
+                    username
+                    error
+                    profilePicture
+                    bio
+                    role
+                }
+            }
+            `;
             try {
-                const response = await fetch(config.graphqlUrl, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-                    },
-                    body: JSON.stringify({ query }),
-                });
-                const { data, errors } = await response.json();
-                console.log(data)
-                if (errors) {
-                    this.error = errors[0]?.message || "An error occurred.";
+                const {response,error} = await getDataGraphQL(query)
+
+                if (error) {
+                    this.error = error || "An error occurred.";
                 }
                 else {
-                    this.users = data.getFollowers;
-                    this.requests = data.getFollowRequests;
+                    this.users = response.getFollowers;
+                    this.requests = response.getFollowRequests;
                     this.count = this.users.length;
                 }
             }

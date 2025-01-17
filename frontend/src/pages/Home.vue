@@ -62,10 +62,10 @@
 <script>
 import config from "@/config";
 import image from "../assets/profile.png"
-import ImageViewer from './ImageViewer.vue';
+import ImageViewer from '../components/ImageViewer.vue';
 import { getDataGraphQL } from "@/assets/dataProvider";
 import markdownit from 'markdown-it'
-import ImagePreviewsC from './ImagePreviewsC.vue'
+import ImagePreviewsC from '../components/ImagePreviewsC.vue'
 
 const markdown = markdownit().disable(['image'])
 

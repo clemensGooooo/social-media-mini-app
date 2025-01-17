@@ -8,7 +8,7 @@ const crypto = require("crypto");
 
 const resolvers = {
     getUser: async (args, context) => {
-        if (context.auth.user !== "user") {
+        if (context.auth.user === "guest") {
             return { error: "You are not authorized to perform this action" };
         }
         const id = context.auth.id;
@@ -45,21 +45,30 @@ const resolvers = {
             return { error: "Error retrieving users" }
         }
     },
-    getPublicUser: async ({ username }) => {
+    getPublicUser: async ({ username },context) => {
+        if (context.auth.user === "guest") {
+            return { error: "You are not authorized to perform this action" };
+        }
+        const id = context.auth.id;
         try {
             const user = await User.findOne({ username: { $eq: username } });
+            // follower: 2, follow_requested: 1, not anything: 0
+            let followed = user.followers.includes(id) ? 2 : 0;
+            if (user.requested_followers.includes(id)) followed = 1
+
             return {
                 username: user.username,
                 bio: user.bio,
                 role: user.role,
-                profilePicture: user.profilePicture
+                profilePicture: user.profilePicture,
+                followed: followed
             };
         } catch (err) {
             return { error: "Error retrieving user" }
         }
     },
     searchUsers: async ({ query }, context) => {
-        if (context.auth.user !== "user") {
+        if (context.auth.user === "guest") {
             return { error: "You are not authorized to perform this action" };
         }
         if (query.length < 2) {
@@ -76,9 +85,9 @@ const resolvers = {
         });
         return filteredUsers
     },
-    createUser: async ({ firstName, lastName, dateOfBirth, email, password, username, bio }, context) => {
+    createUser: async ({ firstName, lastName, dateOfBirth, email, password, username, bio, isPrivate }, context) => {
         try {
-            role = "user";
+            const role = isPrivate ? "user_private" : "user_public"
             profilePicture = "none";
             if (isEmailValid(email) === false) {
                 return { error: "Invalid email" }
@@ -121,7 +130,7 @@ const resolvers = {
         }
     },
     updateUser: async ({ firstName, lastName, username, email, password, lastPassword, bio }, context) => {
-        if (context.auth.user !== "user") {
+        if (context.auth.user === "guest") {
             return { error: "You are not authorized to perform this action" };
         }
         const user_sanitized = {};
@@ -197,7 +206,7 @@ const resolvers = {
         }
     },
     deleteUser: async (args, context) => {
-        if (context.auth.user !== "user") {
+        if (context.auth.user === "guest") {
             return { error: "You are not authorized to perform this action" };
         }
         const id = context.auth.id;
@@ -209,7 +218,7 @@ const resolvers = {
         }
     },
     requestFollow: async ({ username }, context) => {
-        if (context.auth.user !== "user") {
+        if (context.auth.user === "guest") {
             return { error: "You are not authorized to perform this action" };
         }
         const id = context.auth.id;
@@ -221,18 +230,46 @@ const resolvers = {
             if (user.id === id) {
                 return { error: "You cannot follow yourself" }
             }
-            const userRequested = await User.findByIdAndUpdate(
-                user.id,
-                { $addToSet: { requested_followers: id } },
-                { new: true }
-            );
+            if (user.role == "user_public") {
+                await User.findByIdAndUpdate(
+                    user.id,
+                    { $addToSet: { followers: id } },
+                    { new: true }
+                );
+            } else {
+                await User.findByIdAndUpdate(
+                    user.id,
+                    { $addToSet: { requested_followers: id } },
+                    { new: true }
+                );
+            }
+            return { success: true };
+        } catch (err) {
+            return { error: "Unexpected" }
+        }
+    },
+    unFollow: async ({username}, context) => {
+        if (context.auth.user === "guest") {
+            return { error: "You are not authorized to perform this action" };
+        }
+        const id = context.auth.id;
+        try {
+            const user = await User.findOne({ username });
+            if (!user) {
+                return { error: "User not found" }
+            }
+                await User.findByIdAndUpdate(
+                    user.id,
+                    { $pull: { followers: id } },
+                    { new: true }
+                );
             return { success: true };
         } catch (err) {
             return { error: "Unexpected" }
         }
     },
     getFollowRequests: async (args, context) => {
-        if (context.auth.user !== "user") {
+        if (context.auth.user === "guest") {
             return { error: "You are not authorized to perform this action" };
         }
         const id = context.auth.id;
@@ -253,7 +290,7 @@ const resolvers = {
         }
     },
     acceptFollow: async ({ username }, context) => {
-        if (context.auth.user !== "user") {
+        if (context.auth.user === "guest") {
             return { error: "You are not authorized to perform this action" };
         }
         const id = context.auth.id;
@@ -273,7 +310,7 @@ const resolvers = {
         }
     },
     getFollowerCount: async (args, context) => {
-        if (context.auth.user !== "user") {
+        if (context.auth.user === "guest") {
             return { error: "You are not authorized to perform this action" };
         }
         const id = context.auth.id;
@@ -285,7 +322,8 @@ const resolvers = {
         }
     },
     getFollowers: async (args, context) => {
-        if (context.auth.user !== "user") {
+
+        if (context.auth.user === "guest") {
             return { error: "You are not authorized to perform this action" };
         }
         const id = context.auth.id;
@@ -309,7 +347,7 @@ const resolvers = {
         }
     },
     createPost: async ({ content, referredTo, isActivated }, context) => {
-        if (context.auth.user !== "user") {
+        if (context.auth.user === "guest") {
             return { error: "You are not authorized to perform this action" };
         }
         const id = context.auth.id;
@@ -349,7 +387,7 @@ const resolvers = {
         }
     },
     getPosts: async ({ username }, context) => {
-        if (context.auth.user !== "user") {
+        if (context.auth.user === "guest") {
             return { error: "You are not authorized to perform this action" };
         }
         const id = context.auth.id;
@@ -359,7 +397,7 @@ const resolvers = {
             if (!user) {
                 return { error: "User not found" }
             }
-            if (user.followers.find((follower) => { return follower._id.toString() == id }) || user._id == id) {
+            if (user.followers.find((follower) => { return follower._id.toString() == id }) || user._id == id || user.role == "user_public") {
 
                 const posts = await Posts.find({ users: { $in: user }, isOnline: { $eq: true }, referredTo: null });
                 const filteredPosts = posts.map(async (post) => {
@@ -399,7 +437,7 @@ const resolvers = {
         }
     },
     getNewestPosts: async (args, context) => {
-        if (context.auth.user !== "user") {
+        if (context.auth.user === "guest") {
             return { error: "You are not authorized to perform this action" };
         }
         const id = context.auth.id;
@@ -449,7 +487,7 @@ const resolvers = {
         }
     },
     likePost: async ({ postId, remove }, context) => {
-        if (context.auth.user !== "user") {
+        if (context.auth.user === "guest") {
             return { error: "You are not authorized to perform this action" };
         }
         const id = context.auth.id;
@@ -479,7 +517,7 @@ const resolvers = {
         }
     },
     deletePost: async ({ postId }, context) => {
-        if (context.auth.user !== "user") {
+        if (context.auth.user === "guest") {
             return { error: "You are not authorized to perform this action" };
         }
         try {
@@ -498,7 +536,7 @@ const resolvers = {
         }
     },
     getPost: async ({ postId }, context) => {
-        if (context.auth.user !== "user") {
+        if (context.auth.user === "guest") {
             return { error: "You are not authorized to perform this action" };
         }
         const getProperties = async (post) => {
@@ -557,7 +595,7 @@ const resolvers = {
         }
     },
     activatePost: async ({ postId }, context) => {
-        if (context.auth.user !== "user") {
+        if (context.auth.user === "guest") {
             return { error: "You are not authorized to perform this action" };
         }
         try {

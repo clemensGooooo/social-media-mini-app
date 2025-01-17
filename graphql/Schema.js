@@ -14,11 +14,12 @@ const schema = buildSchema(`
     followerRequest: Int
   }
   type PublicUser {
-    username: String,
+    username: String
     error: String
     profilePicture: String
     bio: String
     role: String
+    followed: Int
   }
   type Followers {
     username: String,
@@ -90,7 +91,7 @@ const schema = buildSchema(`
   }
 
   type Mutation {
-    createUser(username: String!, firstName: String!,lastName: String!,bio: String!,dateOfBirth: String!, email: String!, password: String!): CreateUserResponse
+    createUser(username: String!, firstName: String!,lastName: String!,bio: String!,dateOfBirth: String!, email: String!, password: String!,isPrivate: Boolean): CreateUserResponse
     updateUser(username: String, email: String, password: String,lastPassword: String,lastName: String,bio: String): UpdateUserResponse
     login(username: String, email: String, password: String!): LoginResponse
     deleteUser: UpdateUserResponse
@@ -100,6 +101,7 @@ const schema = buildSchema(`
     likePost(postId: String!): LikeResponse
     deletePost(postId: String!): UpdateUserResponse
     activatePost(postId: String!): UpdateUserResponse
+    unFollow(username: String!): UpdateUserResponse
   }
 `);
 

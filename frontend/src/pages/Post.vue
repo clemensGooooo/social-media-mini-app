@@ -9,7 +9,7 @@
             <div class="master-post">
                 <div class="post-header">
                     <img :src="post.users[0].profilePicture == 'none' ? image : post.users[0].profilePicture"
-                        alt="User Profile" class="profile-img">
+                        alt="User Profile" class="profile-img" @click="goToUser(post.users[0].username)">
                     <h3 class="username">{{ post.users[0].username }}</h3>
                     <button v-if="post.users.find((user) => user.username == username)" @click="deletePost(post)"
                         class="delete-post-button" title="Delete Post">
@@ -52,7 +52,7 @@
             <div v-for="post in posts" :key="post.postId" class="post-card">
                 <div class="post-header">
                     <img :src="post.users[0].profilePicture == 'none' ? image : post.users[0].profilePicture"
-                        alt="User Profile" class="profile-img">
+                        alt="User Profile" class="profile-img"  @click="goToUser(post.users[0].username)">
                     <h3 class="username">{{ post.users[0].username }}</h3>
                     <button v-if="post.users.find((user) => user.username == username)" @click="deletePost(post)"
                         class="delete-post-button" title="Delete Post">
@@ -81,11 +81,10 @@
     {{ }}
 </template>
 <script>
-import ImageViewer from './ImageViewer.vue';
-import config from '@/config';
+import ImageViewer from '../components/ImageViewer.vue';
 import markdownit from 'markdown-it'
 import image from '@/assets/profile.png'
-import ErrorBox from './ErrorBox.vue';
+import ErrorBox from '../components/ErrorBox.vue';
 import { getDataGraphQL } from '@/assets/dataProvider';
 
 const markdown = markdownit().disable(['image'])
@@ -114,6 +113,9 @@ export default {
         ErrorBox
     },
     methods: {
+        goToUser(username) {
+            this.$router.push({ name: 'user', params: { username: username } });
+        },
         clearError() {
             this.error = null;
         },
@@ -312,6 +314,7 @@ isLiked
     height: 50px;
     border-radius: 50%;
     border: 2px solid #6a1b9a;
+    cursor: pointer;
     /* Add border for a polished look */
     margin-right: 15px;
 }

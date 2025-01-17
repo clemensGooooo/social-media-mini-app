@@ -26,3 +26,6 @@ secretKey=minioadmin
 
 ## Start the server
 You need a running instance of [MinIO](https://github.com/minio/minio) and a running MongoDB server. You can set the individual URLs in the `.env` file.
+
+## Types of users
+`private`, `public`
