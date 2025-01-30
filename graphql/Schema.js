@@ -102,6 +102,7 @@ const schema = buildSchema(`
     deletePost(postId: String!): UpdateUserResponse
     activatePost(postId: String!): UpdateUserResponse
     unFollow(username: String!): UpdateUserResponse
+    report(type: String!,description: String!): UpdateUserResponse
   }
 `);
 

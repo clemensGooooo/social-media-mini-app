@@ -53,7 +53,7 @@ const bucketNames = [process.env.BUCKET_NAME, 'posts'];
     for (const bucketName of bucketNames) {
         const bucketExists = await minioClient.bucketExists(bucketName).catch(() => false);
         if (!bucketExists) {
-            await minioClient.makeBucket('profile-pictures', 'here');
+            await minioClient.makeBucket(bucketName, 'here');
             console.log(`Bucket "${bucketName}" created successfully.`);
         }
         const policy = {

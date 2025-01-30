@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const Reports = require("../models/Reports");
 const { generateJWT } = require("../auth");
 const { sanitizer_names, isEmailValid, sanitizer_bio } = require("../controllers/sanitizer");
 const { generatePassword, checkPassword } = require("../controllers/password");
@@ -611,6 +612,24 @@ const resolvers = {
             return { success: true };
         } catch (err) {
             return { error: "Error activating post" }
+        }
+    },
+    report: async ({ type, description }, context) => {
+        if (context.auth.user === "guest") {
+            return { error: "You are not authorized to perform this action" };
+        }
+        try {
+            const report = {
+                type,
+                description: atob(description),
+                user: context.auth.id,
+                date: new Date().toISOString(),
+                status: 0
+            };
+            await Reports.create(report);
+            return { success: true };
+        } catch (err) {
+            return { error: "Error reporting" }
         }
     }
 };

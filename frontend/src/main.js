@@ -9,17 +9,23 @@ import Home from './pages/Home.vue'
 import Followers from './pages/Followers.vue'
 import Post from './pages/Post.vue'
 import Search from './pages/Search.vue'
+import About from './pages/About.vue'
+import NotFound from './pages/NotFound.vue'
+import Report from './pages/Report.vue'
 import './assets/base.css'
 
 const routes = [
   { path: '/', component: Home,name: 'home' },
     { path: '/login', component: Login,name: 'login' },
+    { path: '/about', component: About,name: 'about' },
     { path: '/register', component: Register,name: 'register' },
     { path: '/profile', component: Profile,name: 'profile' },
     { path: '/user/:username', component: User,name: 'user' },
     { path: '/post/:postId', component: Post,name: 'post' },
     { path: '/followers', component: Followers,name: 'followers' },
     { path: '/search', component: Search,name: 'search' },
+    { path: '/report', component: Report,name: 'report' },
+    {path: '/:pathMatch(.*)*', component: NotFound,name: 'notfound' },
   ]
   
   const router = createRouter({

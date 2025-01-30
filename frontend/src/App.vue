@@ -3,7 +3,7 @@
 <script>
 
 import Navbar from '@/components/Navbar.vue';
-
+import Footer from '@/components/Footer.vue';
 
 export default {
     name: "App",
@@ -20,7 +20,8 @@ export default {
         $route: 'handleRouteChange',
     },
     components: {
-        Navbar
+        Navbar,
+        Footer
     },
     data() {
         return {
@@ -33,7 +34,7 @@ export default {
             if (!routeName) return;
 
             if (!localStorage.getItem('authToken')) {
-                if (routeName !== 'login' && routeName !== 'register') {
+                if (routeName !== 'login' && routeName !== 'register' && routeName !== 'about') {
                     this.$router.push({ name: 'login' });
                 }
             }
@@ -50,4 +51,6 @@ export default {
     <Navbar v-if="state" />
 
     <router-view />
+
+    <Footer />
 </template>
