@@ -46,7 +46,7 @@ const resolvers = {
             return { error: "Error retrieving users" }
         }
     },
-    getPublicUser: async ({ username },context) => {
+    getPublicUser: async ({ username }, context) => {
         if (context.auth.user === "guest") {
             return { error: "You are not authorized to perform this action" };
         }
@@ -249,7 +249,7 @@ const resolvers = {
             return { error: "Unexpected" }
         }
     },
-    unFollow: async ({username}, context) => {
+    unFollow: async ({ username }, context) => {
         if (context.auth.user === "guest") {
             return { error: "You are not authorized to perform this action" };
         }
@@ -259,11 +259,11 @@ const resolvers = {
             if (!user) {
                 return { error: "User not found" }
             }
-                await User.findByIdAndUpdate(
-                    user.id,
-                    { $pull: { followers: id } },
-                    { new: true }
-                );
+            await User.findByIdAndUpdate(
+                user.id,
+                { $pull: { followers: id } },
+                { new: true }
+            );
             return { success: true };
         } catch (err) {
             return { error: "Unexpected" }
@@ -365,9 +365,9 @@ const resolvers = {
             if (isActivated === false) {
                 isOnline = false;
             }
-
+            content = decodeURIComponent(escape(atob(content)))
             const post = {
-                content: atob(content),
+                content: content,
                 likes: [],
                 users: [id],
                 date: new Date().toISOString(),

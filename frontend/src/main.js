@@ -12,6 +12,8 @@ import Search from './pages/Search.vue'
 import About from './pages/About.vue'
 import NotFound from './pages/NotFound.vue'
 import Report from './pages/Report.vue'
+import Settings from './pages/Settings.vue'
+
 import './assets/base.css'
 
 const routes = [
@@ -25,6 +27,7 @@ const routes = [
     { path: '/followers', component: Followers,name: 'followers' },
     { path: '/search', component: Search,name: 'search' },
     { path: '/report', component: Report,name: 'report' },
+    { path: '/settings', component: Settings,name: 'settings' },
     {path: '/:pathMatch(.*)*', component: NotFound,name: 'notfound' },
   ]
   

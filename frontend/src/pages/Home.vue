@@ -140,7 +140,7 @@ export default {
                 return;
             }
             var re = new RegExp(/\n/, 'g');
-            const content = btoa(this.content);
+            const content = btoa(unescape(encodeURIComponent(this.content)));
 
             const normal = `
                 mutation CreatePost {
@@ -257,6 +257,7 @@ export default {
                 this.error = error;
                 return;
             }
+            console.log(response.getNewestPosts.posts)
             this.posts = response.getNewestPosts.posts;
         },
         async toggleLike(post) {

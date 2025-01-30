@@ -7,6 +7,7 @@ export const getDataGraphQL = async (query) => {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                    'Content-Type': 'application/json; charset=utf-8',
                 Authorization: `Bearer ${localStorage.getItem('authToken')}`,
             },
             body: JSON.stringify({ query }),

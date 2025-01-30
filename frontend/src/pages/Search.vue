@@ -51,6 +51,9 @@ export default {
             this.users = response.searchUsers;
 
         },
+        goToUser(username) {
+            this.$router.push({ name: 'user', params: { username: username } });
+        },
     }
 }
 
