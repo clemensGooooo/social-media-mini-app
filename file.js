@@ -150,7 +150,7 @@ file.post('/mediaUpload', upload.single('file'), async (req, res) => {
         res.status(200).send({ filename: originalname, mimetype, url });
 
     } catch (error) {
-        console.error('Error uploading file:', error);
+        console.error('Error uploading file:', error, ' please retry!');
         res.status(500).send({ error: 'Failed to upload file' });
     }
 });
