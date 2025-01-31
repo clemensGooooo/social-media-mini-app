@@ -6,7 +6,8 @@
             </div>
             <textarea v-model="content" placeholder="Write something..." rows="4"></textarea>
             <div class="image-upload">
-                <input type="file" id="imageUpload" accept="image/*" @change="handleImageUpload" style="display: none;" />
+                <input type="file" id="imageUpload" accept="image/*" @change="handleImageUpload"
+                    style="display: none;" />
                 <ImagePreviewsC :imagePreviews="imagePreviews" @remove="removeImage" />
             </div>
             <div class="post-buttons">
@@ -20,8 +21,8 @@
 
         <div v-for="post in posts" :key="post.postId" class="post-card">
             <div class="post-header">
-                <img :src="post.users[0].profilePicture == 'none' ? image : post.users[0].profilePicture" alt="User Profile"
-                    class="profile-img" @click="goToUser(post.users[0].username)">
+                <img :src="post.users[0].profilePicture == 'none' ? image : post.users[0].profilePicture"
+                    alt="User Profile" class="profile-img" @click="goToUser(post.users[0].username)">
                 <h3 class="username">{{ post.users[0].username }}</h3>
             </div>
             <!-- Image Viewer Section -->
@@ -37,6 +38,11 @@
                     <button @click="toggleLike(post)"
                         :class="{ 'liked': post.likes.find((user) => { return user.username == username }) ? true : false }"
                         class="like-button">
+                        <i class="like-icon"></i>
+                    </button>
+                    <span class="likes-count">{{ post.commentCount }}</span>
+                    <button @click="openPost(post)"
+                        class="like-button comment-button">
                         <i class="like-icon"></i>
                     </button>
                 </div>
@@ -58,7 +64,7 @@
         </div>
     </div>
 </template>
-  
+
 <script>
 import config from "@/config";
 import image from "../assets/profile.png"
@@ -66,6 +72,7 @@ import ImageViewer from '../components/ImageViewer.vue';
 import { getDataGraphQL } from "@/assets/dataProvider";
 import markdownit from 'markdown-it'
 import ImagePreviewsC from '../components/ImagePreviewsC.vue'
+import { formatTime } from "@/assets/utils";
 
 const markdown = markdownit().disable(['image'])
 
@@ -108,19 +115,7 @@ export default {
 
     },
     methods: {
-        formatTime(timestamp)  {
-            const now = new Date();
-            const time = new Date(timestamp);
-            const diffInSeconds = Math.floor((now - time) / 1000);
-
-            if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
-            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-            if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
-
-            const options = { year: 'numeric', month: 'short', day: 'numeric' };
-            return time.toLocaleDateString(undefined, options);
-        },
+        formatTime,
         handleImageUpload(event) {
             const files = Array.from(event.target.files);
             files.forEach((file) => {
@@ -243,6 +238,7 @@ export default {
                                 bio
                                 role
                             }
+                            commentCount
                         }
                     }
                     getUser {
@@ -289,7 +285,7 @@ export default {
     }
 };
 </script>
-  
+
 <style scoped>
 .post-buttons {
     display: flex;
@@ -504,7 +500,7 @@ textarea:focus {
 .like-container {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 5px;
 }
 
 .likes-count {
@@ -533,6 +529,10 @@ textarea:focus {
     background-size: cover;
     filter: grayscale(100%);
     transition: transform 0.3s ease, filter 0.3s ease;
+}
+.comment-button .like-icon {
+    background-image: url('https://cdn-icons-png.flaticon.com/512/1380/1380338.png');
+    filter: invert(1) brightness(60%) grayscale(100%);
 }
 
 .like-button.liked .like-icon {
@@ -578,4 +578,3 @@ textarea:focus {
     color: #fff;
 }
 </style>
-  

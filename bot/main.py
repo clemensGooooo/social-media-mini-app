@@ -1,45 +1,51 @@
 # About:
 # This script generates bots which interact with the platform
 
-from ollama import chat
-from ollama import ChatResponse
 import requests
 import base64
 import json
 import time
 import random
+import pprint
+
+from prompts import generateUser, generatePost,generateComment
 
 URL = "http://localhost:4000/graphql"
+
+def make_request(mutation, token=None):
+    headers = {"Authorization": f"Bearer {token}"} if token else {}
+    payload = {"query": mutation}
+    response = requests.post(URL, json=payload, headers=headers)
+    
+    if response.status_code == 200:
+        return response.json().get("data", {})
+    else:
+        print(f"Request failed with status code {response.status_code}")
+        print(response.text)
+        return None
 
 def login(username, password):
     mutation = f'''
     mutation Login {{
-        login(username: "{username}",password: "{password}") {{
+        login(username: "{username}", password: "{password}") {{
             token
             error
         }}
     }}
     '''
-    payload = {"query": mutation}
-
-    response = requests.post(URL, json=payload)
+    data = make_request(mutation)
     
-    if response.status_code == 200:
-        data = response.json()
-        login_response = data.get("data", {}).get("login", {})
+    if data:
+        login_response = data.get("login", {})
         token = login_response.get("token")
         error = login_response.get("error")
         
         if token:
-            print(f"Login successful! Token")
+            print("Login successful!")
             return token
         elif error:
             print(f"Login failed! Error: {error}")
-            return None
-    else:
-        print(f"Request failed with status code {response.status_code}")
-        print(response.text)
-        return None
+    return None
 
 def create_user(username, first_name, last_name, bio, date_of_birth, email, password):
     mutation = f'''
@@ -51,7 +57,7 @@ def create_user(username, first_name, last_name, bio, date_of_birth, email, pass
             bio: "{bio}",
             dateOfBirth: "{date_of_birth}",
             email: "{email}",
-            password: "{password}"
+            password: "{password}",
             isPrivate: false
         ) {{
             token
@@ -59,93 +65,43 @@ def create_user(username, first_name, last_name, bio, date_of_birth, email, pass
         }}
     }}
     '''
+    data = make_request(mutation)
     
-    payload = {"query": mutation}
-    
-    response = requests.post(URL, json=payload)
-    
-    if response.status_code == 200:
-        data = response.json()
-        create_user_response = data.get("data", {}).get("createUser", {})
+    if data:
+        create_user_response = data.get("createUser", {})
         token = create_user_response.get("token")
         error = create_user_response.get("error")
         
         if token:
-            print(f"User created successfully! Username: {username}")
             return token
         elif error:
             print(f"User creation failed! Error: {error}")
-            return None
-    else:
-        print(f"Request failed with status code {response.status_code}")
-        print(response.text)
-        return None
+    return None
 
-def createPost(content, token):
-    content = base64.b64encode(content.encode()).decode()
+def create_post(content, token, referred_to=None):
+    encoded_content = base64.b64encode(content.encode()).decode()
     mutation = f'''
-    mutation Report {{
-        createPost(content: "{content}", isActivated: true) {{
+    mutation CreatePost {{
+        createPost(content: "{encoded_content}"{f", referredTo: \"{referred_to}\"" if referred_to else ""}, isActivated: true) {{
+            postId
             error
         }}
     }}
     '''
-    payload = {"query": mutation}
-
-    response = requests.post(URL, json=payload, headers=
-                             {"Authorization": f"Bearer {token}"}
-)
+    data = make_request(mutation, token)
     
-    if response.status_code == 200:
-        data = response.json()
-        login_response = data.get("data", {}).get("login", {})
-        error = login_response.get("error")
+    if data:
+        post_response = data.get("createPost", {})
+        error = post_response.get("error")
+        post_id = post_response.get("postId")
         
         if error:
-            print(f"Creation of post failed! Error: {error}")
+            print(f"Post creation failed! Error: {error}")
             return None
-        else:
-            print(f"Post created successfully!")
-            return True
-        
-    else:
-        print(f"Creation of post failed with status code {response.status_code}")
-        print(response.text)
-        return None
+        return post_id if post_id else True
+    return None
 
-def generatePost(additional_prompt=""):
-    response: ChatResponse = chat(model='mistral', messages=[
-            {'role': 'system', 'content': '''
-             Keep responses concise and under 30 words.
-             Use markdown for styling your posts. 
-             Don't use html tags.
-             Make the posts personal!
-             '''}, 
-    {
-        'role': 'user',
-        'content': f'''
-                Create social media post to a topic of your choice which is ready to be uploaded to the platform.
-    {additional_prompt}
-    '''  },
-    ])
-    return response['message']['content']
-
-def generateUser():
-    response: ChatResponse = chat(model='mistral', messages=[
-            {'role': 'user', 'content': '''
-             Output a user object with the following fields, be creative with the values and make usernames unique and random from communities use us names:
-                - username
-                - first_name
-                - last_name
-                - bio
-                - date_of_birth
-                - email
-                - password
-             Only output the json object dont use comments
-             '''}    ])
-    return response['message']['content']
-
-def sendFollowerRequest(token, username):
+def send_follower_request(token, username):
     mutation = f'''
     mutation {{
         requestFollow(username: "{username}") {{
@@ -154,64 +110,35 @@ def sendFollowerRequest(token, username):
         }}
     }}
     '''
-    payload = {"query": mutation}
-
-    response = requests.post(URL, json=payload, headers=
-                             {"Authorization": f"Bearer {token}"}
-)
+    data = make_request(mutation, token)
     
-    if response.status_code == 200:
-        data = response.json()
-        login_response = data.get("data", {}).get("sendFollowerRequest", {})
-        error = login_response.get("error")
+    if data:
+        response = data.get("requestFollow", {})
+        error = response.get("error")
         
         if error:
             print(f"Sending follower request failed! Error: {error}")
             return None
-        else:
-            print(f"Follower request sent successfully!")
-            return True
-        
-    else:
-        print(f"Sending follower request failed with status code {response.status_code}")
-        print(response.text)
-        return None
+        return True
+    return None
 
-def generateRobotNet(amount=1,timing=1):
-    accounts = []
-    for i in range(amount):
-        try:
-            user = generateUser()
-            user = json.loads(user)
-            token = create_user(
-                username=user["username"],
-                first_name=user["first_name"],
-                last_name=user["last_name"],
-                bio=user["bio"],
-                date_of_birth=user["date_of_birth"],
-                email=user["email"],
-                password=user["password"]
-            )
-            accounts.append({"user": user, "token": token})
-            post = generatePost(f"This is the first post of this user to the platform, your name is {user['username']} and your bio is {user['bio']}")
-            time.sleep(timing)
-            createPost(post,token)
-        except Exception as error:
-            print(error)
-            print("User generation failed")
-    for account in accounts:
-        users = get_users()
-        for user in users:
-            sendFollowerRequest(accounts[0]["token"],user["username"])
-            time.sleep(timing)
-        acceptFollowers(account["token"])
-    while True:
-        for account in accounts:
-            user = account["user"]
-            post = generatePost(f"your name is {user['username']} and your bio is {user['bio']}, create a post to your followers")
-            time.sleep(timing)
-            createPost(post,token)
-            acceptFollowers(account["token"])
+def likePost(post,token):
+    mutation = f'''
+    mutation {{
+        likePost(postId: "{post["postId"]}", remove: false) {{
+            error
+        }}
+    }}
+    '''
+    data = make_request(mutation, token)
+    
+    if data:
+        error = data.get("likePost", {}).get("error")
+        if error:
+            print(f"Post like failed! Error: {error}")
+            return None
+        return True
+    return None
 
 def get_users():
     query = '''
@@ -240,6 +167,106 @@ def get_users():
         print(f"Request failed with status code {response.status_code}")
         print(response.text)
         return None
+
+class User:
+    def __init__(self):
+        self.error = False
+        try:
+            user,self.community = generateUser()
+            self.user = json.loads(user)
+            self.token = create_user(
+                        username=self.user["username"],
+                        first_name=self.user["first_name"],
+                        last_name=self.user["last_name"],
+                        bio=self.user["bio"],
+                        date_of_birth=self.user["date_of_birth"],
+                        email=self.user["email"],
+                        password=self.user["password"]
+                    )
+            if not self.token:
+                self.error = True
+                return
+            self.account = {"user":self.user,"token":self.token,"community":self.community}
+            self.new = True
+        except Exception as error:
+            self.error = True
+            return
+        return
+    def __str__(self):
+        return f"Username: {self.user['username']} Token: {self.token}"
+    def generateInit(self):
+        account = {"user":self.user,"token":self.token,"community":self.community}
+        post = generatePost(account, new=1)
+        create_post(post,self.token)
+        return post
+    def createPost(self):
+        if self.new:
+            post = self.generateInit()
+            self.new = False
+            return post
+        post = generatePost(self.account)
+        create_post(post,self.token)
+        return post
+    def createComment(self,post):
+        comment = generateComment(post,self.account)
+        create_post(comment,self.token, referred_to=post["postId"])
+        return
+    def likePost(self,post):
+        likePost(post,self.token)
+        return
+    def sendFollowerRequest(self,username):
+        send_follower_request(self.token,username)
+        return
+    def getPosts(self):
+        posts = get_newest_posts(self.token)
+        post = random.choice(posts)
+        return post
+    def getFriends(self):
+        users = get_users()
+        user = random.choice(users)
+        return user["username"]
+    def doRandomAction(self):
+        acceptFollowers(self.token)
+        actions = ["createPost", "createComment", "likePost", "sendFollowerRequest"]
+        probabilities = [0.1, 0.2, 0.5, 0.2]
+        
+        action = random.choices(actions, weights=probabilities, k=1)[0]
+        pprint.pprint(f"Action: {action}")
+        if action == "createPost":
+            self.createPost()
+        elif action == "createComment":
+            post = self.getPosts()
+            self.createComment(post)
+        elif action == "likePost":
+            post = self.getPosts()
+            self.likePost(post)
+        elif action == "sendFollowerRequest":
+            user = self.getFriends()
+            self.sendFollowerRequest(user)
+        return
+    
+def generateRobotNet(amount=1,timing=1):
+    accounts = []
+    user = User()
+    if user.error:
+        print("User generation failed")
+        return
+    accounts.append(user)
+    while True:
+        actions = [True, False]
+        probabilities = [0.05, 0.95]
+        action = random.choices(actions, weights=probabilities, k=1)[0]
+        if action:
+            user = User()
+            pprint.pprint(user)
+            if user.error:
+                print("User generation failed")
+                return
+            accounts.append(user)
+        else:
+            user = random.choice(accounts)
+            user.doRandomAction()
+            time.sleep(timing)
 
 def acceptFollowerRequest(token, username):
     mutation = f'''
@@ -305,6 +332,30 @@ def acceptFollowers(token):
         print(response.text)
         return None
 
+def get_newest_posts(token):
+    query = '''
+    query GetNewestPosts {
+        getNewestPosts {
+            error
+            posts {
+                postId
+                content
+            }
+        }
+    }
+    '''
+    data = make_request(query,token=token)
+    
+    if data:
+        response = data.get("getNewestPosts", {})
+        error = response.get("error")
+        posts = response.get("posts", [])
+        
+        if error:
+            print(f"Fetching posts failed! Error: {error}")
+            return None
+        return posts
+    return None
 
 if __name__ == '__main__':
     generateRobotNet(1)

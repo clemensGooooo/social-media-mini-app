@@ -24,6 +24,8 @@ accessKey=minioadmin
 secretKey=minioadmin
 ```
 
+You can generate some users and posts by running the bot script
+
 ## Start the server
 You need a running instance of [MinIO](https://github.com/minio/minio) and a running MongoDB server. You can set the individual URLs in the `.env` file.
 

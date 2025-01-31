@@ -12,9 +12,9 @@
         <div class="navbar-right">
             <button class="navbar-item" @click="goToYourPosts">Your Posts</button>
 
-            <img v-if="profileImage" :src="profileImage" alt="Profile" class="profile-image clickable" @click="profile" />
+            <img v-if="profileImage" :src="profileImage" alt="Profile" class="profile-image clickable" @click="settings" />
 
-            <span v-else class="profile-placeholder clickable" @click="profile">
+            <span v-else class="profile-placeholder clickable" @click="settings">
                 Profile
             </span>
             <button class="navbar-item" @click="logout">Logout</button>
@@ -83,8 +83,8 @@ export default {
             localStorage.removeItem("authToken");
             this.$router.push("/login");
         },
-        profile() {
-            this.$router.push("/profile");
+        settings() {
+            this.$router.push("/settings");
         },
         home() {
             this.$router.push("/");

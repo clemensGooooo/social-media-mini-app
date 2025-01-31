@@ -1,8 +1,23 @@
 <template>
     <div class="settings-container">
-        <div class="settings-card">
+        <h2>Settings</h2>
+        <div class="settings-card" @click="goToProfile">
             <h3>Profile</h3>
             <p>Go here to edit your profile, you can edit your profile picture, username, name and more..</p>
+            <svg width="50" height="50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 5l8 7-8 7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+        </div>
+        <div class="settings-card" @click="goToReports">
+            <h3>Reports</h3>
+            <p>Go here to review the reports and their status you submitted to our page and do more..</p>
+            <svg width="50" height="50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 5l8 7-8 7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+        </div>
+        <div class="settings-card" @click="goToLiked">
+            <h3>Liked</h3>
+            <p>Go here to view the posts you liked and go to these posts to inspect/unlike them..</p>
             <svg width="50" height="50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M8 5l8 7-8 7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
@@ -20,6 +35,15 @@ export default {
         };
     },
     methods: {
+        goToProfile() {
+            this.$router.push('/profile');
+        },
+        goToReports() {
+            this.$router.push('/reports');
+        },
+        goToLiked() {
+            this.$router.push('/liked');
+        },
     },
 };
 </script>
@@ -28,10 +52,11 @@ export default {
 .settings-container {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1rem;
     margin: 2rem auto;
     max-width: 600px;
     padding: 1rem;
+    padding-top: 2rem;
     box-sizing: border-box;
 }
 

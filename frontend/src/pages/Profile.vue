@@ -1,5 +1,6 @@
 <template>
-    <div class="profile-page">
+    <div class="report-page">
+        <h2>Your Profile</h2>
         <div class="profile-card">
             <div class="profile-header">
                 <label for="profileImage" class="profile-image-label">
@@ -216,6 +217,7 @@ export default {
 .image-upload-input.hidden {
     display: none;
 }
+
 .image-upload-input {
     margin-top: 20px;
     display: block;
@@ -223,27 +225,35 @@ export default {
     text-align: center;
 }
 
-.profile-page {
+/* Centering the profile page */
+.liked-page {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    padding-top: 50px;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 2rem auto;
+    max-width: 600px;
+    padding: 1rem;
+    padding-top: 2rem;
+    box-sizing: border-box;
 }
 
+/* Styling for profile card similar to settings card */
 .profile-card {
-    background-color: #000000;
-    border: 2px solid #8a2be2;
-    border-radius: 12px;
-    padding: 20px;
-    max-width: 700px;
+    background-color: #131212;
+    border: 1px solid #2e2c2c;
+    border-radius: 8px;
+    padding: 1.5rem;
+    max-width: 600px;
     width: 100%;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
+/* Centering header text */
 .profile-header {
     text-align: center;
 }
 
+/* Profile picture with cursor pointer */
 .profile-picture {
     border-radius: 50%;
     width: 100px;
@@ -252,39 +262,45 @@ export default {
     cursor: pointer;
 }
 
+/* Role text styling */
 .role {
-    color: #6a0dad;
+    color: #8a2be2;
     font-size: 14px;
 }
 
+/* Profile body spacing */
 .profile-body {
     margin-top: 20px;
 }
 
+/* Styling for input fields */
 .form-group {
     margin-bottom: 15px;
     display: flex;
     flex-direction: column;
-    margin-right: 20px;
 }
 
+/* Label styles */
 label {
     display: block;
     margin-bottom: 5px;
-    color: #4b0082;
+    color: #8a2be2;
+    font-weight: 500;
 }
 
+/* Input and textarea styles */
 input,
 textarea {
     width: 100%;
     padding: 8px;
-    border: 1px solid #2b2a33;
+    border: 1px solid #2e2c2c;
     border-radius: 4px;
     font-size: 14px;
-    background-color: #2b2a33;
+    background-color: #1a1818;
     color: #f8f8fb;
 }
 
+/* Button styling */
 .update-button {
     background-color: #8a2be2;
     color: white;
@@ -294,13 +310,14 @@ textarea {
     cursor: pointer;
     width: 100%;
     font-size: 16px;
-
+    transition: background 0.3s ease;
 }
 
 .update-button:hover {
     background-color: #6a0dad;
 }
 
+/* Message styles */
 .error-message {
     color: red;
     margin-top: 10px;
@@ -312,5 +329,6 @@ textarea {
     margin-top: 10px;
     text-align: center;
 }
+
 </style>
   

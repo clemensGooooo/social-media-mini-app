@@ -33,6 +33,13 @@ const schema = buildSchema(`
     error: String
     posts: [Post]
   }
+  type Report {
+    type: String
+    description: String
+    post: Post
+    date: String
+    status: Int
+  }
   
   type Query {
     getUser: User
@@ -45,6 +52,8 @@ const schema = buildSchema(`
     getPost(postId: String!): FullPost
     getNewestPosts: PostMultiple
     searchUsers(query: String): [PublicUser]
+    getReports: [Report]
+    getLikedPosts: [Post]
   }
 
   type Post {
@@ -54,6 +63,7 @@ const schema = buildSchema(`
     date: String
     postId: String
     mediaContent: [String]
+    commentCount: Int
   }
   
   type FullPost {
@@ -98,11 +108,11 @@ const schema = buildSchema(`
     requestFollow(username: String!): UpdateUserResponse
     acceptFollow(username: String!): UpdateUserResponse
     createPost(content: String!,referredTo: String,isActivated: Boolean): PostResponse
-    likePost(postId: String!): LikeResponse
+    likePost(postId: String!,remove: Boolean): LikeResponse
     deletePost(postId: String!): UpdateUserResponse
     activatePost(postId: String!): UpdateUserResponse
     unFollow(username: String!): UpdateUserResponse
-    report(type: String!,description: String!): UpdateUserResponse
+    createReport(type: String!,description: String!): UpdateUserResponse
   }
 `);
 

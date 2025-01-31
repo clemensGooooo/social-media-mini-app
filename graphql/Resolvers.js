@@ -443,15 +443,20 @@ const resolvers = {
         }
         const id = context.auth.id;
         try {
-            const users = await User.find({ followers: { $in: id } });
+            const users = await User.find({$or: [{ followers: { $in: id } },{role: {$eq: "user_public"}}]});
             const followers = users.map((user) => user._id);
-            const newestPosts = await Posts.find({
+            const userPosts = await Posts.find({
                 $and: [{
                     $or: [{ users: { $in: followers } },
                     { users: { $in: id } }]
                 },
-                { referredTo: null }]
-            }).sort({ date: -1 }).limit(10);
+                    { referredTo: null }
+                ]
+            })
+            .sort({ date: -1 })
+            .limit(15);
+            
+            const newestPosts = [...userPosts];
 
             const filteredPosts = newestPosts.map(async (post) => {
                 const creators = post.users.map(async (user) => {
@@ -472,13 +477,15 @@ const resolvers = {
                         profilePicture: user_r.profilePicture
                     };
                 });
+                const commentCount = await Posts.find({ referredTo: { $eq: post.id } }).countDocuments();
                 return {
                     content: post.content,
                     users: creators,
                     likes: likers,
                     date: post.date,
                     postId: post.postId,
-                    mediaContent: post.mediaContent
+                    mediaContent: post.mediaContent,
+                    commentCount: commentCount
                 };
             })
             return { posts: filteredPosts };
@@ -491,13 +498,16 @@ const resolvers = {
         if (context.auth.user === "guest") {
             return { error: "You are not authorized to perform this action" };
         }
+        if (remove === undefined) {
+            remove = true;
+        }
         const id = context.auth.id;
         try {
             const post = await Posts.findOne({ postId: { $eq: postId } });
             if (!post) {
                 return { error: "Post not found" }
             }
-            if (post.likes.find((user) => user._id == id)) {
+            if (post.likes.find((user) => user._id == id) && remove) {
                 const post_liked = await Posts.findByIdAndUpdate(
                     post.id,
                     { $pull: { likes: id } },
@@ -614,7 +624,7 @@ const resolvers = {
             return { error: "Error activating post" }
         }
     },
-    report: async ({ type, description }, context) => {
+    createReport: async ({ type, description }, context) => {
         if (context.auth.user === "guest") {
             return { error: "You are not authorized to perform this action" };
         }
@@ -630,6 +640,64 @@ const resolvers = {
             return { success: true };
         } catch (err) {
             return { error: "Error reporting" }
+        }
+    },
+    getReports: async (args, context) => {
+        if (context.auth.user === "guest") {
+            return { error: "You are not authorized to perform this action" };
+        }
+        try {
+            const reports = await Reports.find({ user: context.auth.id }).sort({ date: -1 });
+            return reports.map(report => {
+                    return {
+                        type: report.type,
+                        description: report.description,
+                        post: report.post || "",
+                        date: report.date,
+                        status: report.status
+                    };
+                });
+        } catch (err) {
+            return { error: "Error retrieving reports" }
+        }
+    },
+    getLikedPosts: async (args, context) => {
+        if (context.auth.user === "guest") {
+            return { error: "You are not authorized to perform this action" };
+        }
+        try {
+            const posts = await Posts.find({ likes: { $in: context.auth.id } });
+            const filteredPosts = posts.map(async (post) => {
+                const creators = post.users.map(async (user) => {
+                    const user_r = await User.findById(user);
+                    return {
+                        username: user_r.username,
+                        bio: user_r.bio,
+                        role: user_r.role,
+                        profilePicture: user_r.profilePicture
+                    };
+                });
+                const likers = post.likes.map(async (user) => {
+                    const user_r = await User.findById(user);
+                    return {
+                        username: user_r.username,
+                        bio: user_r.bio,
+                        role: user_r.role,
+                        profilePicture: user_r.profilePicture
+                    };
+                });
+                return {
+                    content: post.content,
+                    users: creators,
+                    likes: likers,
+                    date: post.date,
+                    postId: post.postId,
+                    mediaContent: post.mediaContent
+                };
+            });
+            return filteredPosts;
+        } catch (err) {
+            return { error: "Error retrieving liked posts" }
         }
     }
 };

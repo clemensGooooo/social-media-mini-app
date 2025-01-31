@@ -13,6 +13,8 @@ import About from './pages/About.vue'
 import NotFound from './pages/NotFound.vue'
 import Report from './pages/Report.vue'
 import Settings from './pages/Settings.vue'
+import Reports from './pages/Reports.vue'
+import Liked from './pages/Liked.vue'
 
 import './assets/base.css'
 
@@ -28,6 +30,8 @@ const routes = [
     { path: '/search', component: Search,name: 'search' },
     { path: '/report', component: Report,name: 'report' },
     { path: '/settings', component: Settings,name: 'settings' },
+    { path: '/reports', component: Reports,name: 'reports' },
+    { path: '/liked', component: Liked,name: 'liked' },
     {path: '/:pathMatch(.*)*', component: NotFound,name: 'notfound' },
   ]
   

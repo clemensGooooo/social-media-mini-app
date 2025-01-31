@@ -74,7 +74,7 @@ export default {
             const description = btoa(this.formData.description);
             const payload = `
                 mutation ReportIssue {
-                    report(type: "${this.formData.issueType}", description: "${description}") {
+                    createReport(type: "${this.formData.issueType}", description: "${description}") {
                         success
                         error
                     }
