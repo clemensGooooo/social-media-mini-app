@@ -1,15 +1,15 @@
-
-
 <script>
 
 import Navbar from '@/components/Navbar.vue';
 import Footer from '@/components/Footer.vue';
-
+import axios from 'axios';
+import config from './config';
 export default {
     name: "App",
     mounted() {
         // Wait for route to resolve after mounting
         this.handleRouteChange();
+        this.checkNetworkConnection();
         window.addEventListener('storage', this.handleStorageChange);
     },
     beforeDestroy() {
@@ -38,12 +38,23 @@ export default {
                     this.$router.push({ name: 'login' });
                 }
             }
-            if  (!localStorage.getItem('authToken')) {
+            if (!localStorage.getItem('authToken')) {
                 this.state = false
             } else {
                 this.state = true
             }
-        }
+        },
+        async checkNetworkConnection () {
+            axios.get(config.health)
+                .then(response => {
+                    console.log(response.data);
+                })
+                .catch(error => {
+                    console.error('There has been a problem with your fetch operation:', error);
+                    this.state = false
+                    this.$router.push({ name: 'networkFetchError' });
+                });
+        },
     },
 };
 </script>

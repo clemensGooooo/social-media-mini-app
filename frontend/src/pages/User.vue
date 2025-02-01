@@ -7,7 +7,7 @@
                 <img :src="image" alt="Profile Picture" class="profile-picture" />
                 <h1 class="username">{{ user.username }}</h1>
                 <p class="bio">{{ user.bio }}</p>
-                <p class="role">Role: {{ user.role }}</p>
+                <p class="role">{{ user.role == "user_public" ? "Public User" : "Private User" }}</p>
                 <Follow :user="user" :username="username" @clicked="fetchPosts" />
             </div>
             <div v-if="error" class="error-box">{{ error }}</div>

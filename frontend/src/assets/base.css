@@ -63,6 +63,7 @@
 body {
   min-height: 100vh;
   height: 100vh;
+  padding: 0px;
   color: var(--color-text);
   background: var(--color-background);
   transition:
@@ -99,6 +100,19 @@ body {
   box-sizing: border-box;
   background-color: #181818;
   border-radius: 12px;
-  width: 100%;
+
   box-shadow: 0 16px 16px rgba(0, 0, 0, 0.5);
+}
+
+code {
+  max-height: 300px;  /* Limits height, allowing vertical scroll */
+  overflow-y: auto;   /* Enables vertical scrolling */
+  overflow-x: hidden; /* Prevents horizontal scrolling */
+  padding: 10px;
+  border-radius: 5px;
+
+  /* Ensures text wraps correctly */
+  white-space: pre-wrap; 
+  word-wrap: break-word; 
+
 }

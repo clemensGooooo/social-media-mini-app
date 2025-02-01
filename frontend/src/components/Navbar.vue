@@ -1,25 +1,46 @@
 <template>
-    <nav class="navbar">
-        <div class="navbar-left">
-            <button class="navbar-item" @click="home">Home</button>
-            <button class="navbar-item" @click="goToFollowers">
-                Followers
-                <span v-if="followerCount >= 1">({{ followerCount }})</span>
-            </button>
-            <button class="navbar-item" @click="goToSearch">Search</button>
-        </div>
+<nav class="navbar">
+    <div class="navbar-left">
+        <button class="navbar-item" @click="home">Home</button>
+        <button class="navbar-item" @click="goToFollowers">
+            Followers
+            <span v-if="followerCount >= 1">({{ followerCount }})</span>
+        </button>
+        <button class="navbar-item" @click="goToSearch">Search</button>
+    </div>
 
-        <div class="navbar-right">
-            <button class="navbar-item" @click="goToYourPosts">Your Posts</button>
+    <div class="navbar-right">
+        <button class="navbar-item" @click="goToYourPosts">Your Posts</button>
 
-            <img v-if="profileImage" :src="profileImage" alt="Profile" class="profile-image clickable" @click="settings" />
+        <img v-if="profileImage" :src="profileImage" alt="Profile" class="profile-image clickable" @click="settings" />
 
-            <span v-else class="profile-placeholder clickable" @click="settings">
-                Profile
-            </span>
-            <button class="navbar-item" @click="logout">Logout</button>
-        </div>
-    </nav>
+        <span v-else class="profile-placeholder clickable" @click="settings">
+            Profile
+        </span>
+        <button class="navbar-item" @click="logout">Logout</button>
+    </div>
+
+    <!-- Mobile Hamburger Button -->
+    <button class="hamburger-menu" @click="toggleMobileMenu">
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+    </button>
+    <span class="text-hamburger">Purple</span>
+</nav>
+
+<!-- Mobile Menu -->
+<div v-if="isMobileMenuVisible" class="mobile-menu">
+    <button class="navbar-item" @click="home">Home</button>
+    <button class="navbar-item" @click="goToFollowers">
+        Followers
+        <span v-if="followerCount >= 1">({{ followerCount }})</span>
+    </button>
+    <button class="navbar-item" @click="goToSearch">Search</button>
+    <button class="navbar-item" @click="goToYourPosts">Your Posts</button>
+    <button class="navbar-item" @click="settings">Settings</button>
+    <button class="navbar-item" @click="logout">Logout</button>
+</div>
 </template>
   
 <script>
@@ -34,6 +55,7 @@ export default {
             image: image,
             username: "",
             followerCount: 0,
+            isMobileMenuVisible: false,
         };
     },
     async created() {
@@ -73,6 +95,9 @@ export default {
         }
     },
     methods: {
+        toggleMobileMenu() {
+        this.isMobileMenuVisible = !this.isMobileMenuVisible;
+    },
         goToSearch() {
             this.$router.push("/search");
         },
@@ -103,9 +128,9 @@ export default {
     align-items: center;
     padding: 1rem 2rem;
     background-color: #6a1b9a;
-    /* Purple theme */
     color: white;
     font-size: 1.1rem;
+    position: relative;
 }
 
 .navbar-left,
@@ -127,7 +152,6 @@ export default {
 
 .navbar-item:hover {
     background-color: #8e24aa;
-    /* Hover effect with a slightly lighter purple */
 }
 
 .profile-image {
@@ -151,9 +175,60 @@ export default {
     font-size: 1rem;
     text-transform: uppercase;
 }
+
 .navbar-item span {
-  font-weight: bold;
-  margin-left: 0.5rem;
+    font-weight: bold;
+    margin-left: 0.5rem;
 }
+
+/* Mobile Styles */
+.hamburger-menu {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.hamburger-bar {
+    width: 25px;
+    height: 3px;
+    background-color: white;
+}
+
+.mobile-menu {
+    margin: 5px;
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    position: absolute;
+    top: 60px;
+    left: 20px;
+    background-color: #6a1b9a;
+    padding: 1rem;
+    border-radius: 5px;
+    z-index: 1;
+}
+.text-hamburger {
+    display: none;
+}
+
+/* Media Query for Mobile */
+@media (max-width: 768px) {
+    .navbar-left,
+    .navbar-right {
+        display: none; /* Hide the navbar items */
+    }
+
+    .hamburger-menu {
+        display: flex; /* Show the hamburger menu */
+    }
+    .text-hamburger {
+        display: block;
+    }
+}
+
 </style>
   

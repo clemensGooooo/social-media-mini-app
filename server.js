@@ -15,11 +15,15 @@ mongoose.connection.once("open", () => {
 
 var app = express()
 let corsOptions = {
-  origin : ['http://localhost:5173'],
+  origin : ['http://localhost:5173','http://192.168.1.22:3000'],
 }
 
 app.use(cors(corsOptions))
 app.use(auth)
+
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok" })
+})
 
 app.use("/file", file)
 

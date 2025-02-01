@@ -15,6 +15,7 @@ import Report from './pages/Report.vue'
 import Settings from './pages/Settings.vue'
 import Reports from './pages/Reports.vue'
 import Liked from './pages/Liked.vue'
+import NetworkFetchError from './pages/NetworkFetchError.vue'
 
 import './assets/base.css'
 
@@ -32,6 +33,7 @@ const routes = [
     { path: '/settings', component: Settings,name: 'settings' },
     { path: '/reports', component: Reports,name: 'reports' },
     { path: '/liked', component: Liked,name: 'liked' },
+    { path: '/networkFetchError', component: NetworkFetchError,name: 'networkFetchError' },    
     {path: '/:pathMatch(.*)*', component: NotFound,name: 'notfound' },
   ]
   

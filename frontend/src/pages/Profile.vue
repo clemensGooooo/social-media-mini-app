@@ -1,5 +1,5 @@
 <template>
-    <div class="report-page">
+    <div class="profile-page">
         <h2>Your Profile</h2>
         <div class="profile-card">
             <div class="profile-header">
@@ -14,7 +14,7 @@
                     class="image-upload-input hidden"
                 />
                 <h2>{{ user.firstName }} {{ user.lastName }}</h2>
-                <p class="role">{{ user.role }}</p>
+                <p class="role">{{ user.role == "user_public"? "You are a public user!": "You are a private user!" }}</p>
                 <div v-if="user.bio" class="bio">
                     <p>{{ user.bio }}</p>
                 </div>
@@ -213,6 +213,15 @@ export default {
 </script>
   
 <style scoped>
+.profile-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin: 2rem auto;
+    max-width: 600px;
+    padding: 5px;
+    box-sizing: border-box;
+}
 
 .image-upload-input.hidden {
     display: none;

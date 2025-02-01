@@ -13,8 +13,8 @@
                     <h3 class="username">{{ post.users[0].username }}</h3>
                     <button v-if="post.users.find((user) => user.username == username)" @click="deletePost(post)"
                         class="delete-post-button" title="Delete Post">
-                        <svg class="delete-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
-                            width="20" height="20">
+                        <svg class="delete-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                            fill="currentColor" width="20" height="20">
                             <path
                                 d="M3 6h18v2H3V6zm2 3h14v13c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V9zm3 3v7h2v-7H8zm4 0v7h2v-7h-2zm4 0v7h2v-7h-2zM9 4h6V2H9v2z" />
                         </svg>
@@ -52,12 +52,12 @@
             <div v-for="post in posts" :key="post.postId" class="post-card">
                 <div class="post-header">
                     <img :src="post.users[0].profilePicture == 'none' ? image : post.users[0].profilePicture"
-                        alt="User Profile" class="profile-img"  @click="goToUser(post.users[0].username)">
+                        alt="User Profile" class="profile-img" @click="goToUser(post.users[0].username)">
                     <h3 class="username">{{ post.users[0].username }}</h3>
                     <button v-if="post.users.find((user) => user.username == username)" @click="deletePost(post)"
                         class="delete-post-button" title="Delete Post">
-                        <svg class="delete-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
-                            width="20" height="20">
+                        <svg class="delete-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                            fill="currentColor" width="20" height="20">
                             <path
                                 d="M3 6h18v2H3V6zm2 3h14v13c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V9zm3 3v7h2v-7H8zm4 0v7h2v-7h-2zm4 0v7h2v-7h-2zM9 4h6V2H9v2z" />
                         </svg>
@@ -248,16 +248,16 @@ isLiked
     },
 };
 </script>
-  
+
 <style scoped>
 .post-container {
     padding: 20px;
     background-color: #000000;
     /* Light lavender */
-    width: 60%;
+    width: 100%;
+    max-width: 1000px;
     margin: 50px auto;
     /* Center the container */
-    max-width: 100%;
     /* Use only 60% of the center space */
     border-radius: 10px;
     /* Rounded corners for the container */
@@ -515,4 +515,3 @@ isLiked
     margin-bottom: 50px;
 }
 </style>
-  
