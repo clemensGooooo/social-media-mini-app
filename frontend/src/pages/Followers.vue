@@ -1,31 +1,51 @@
 <template>
     <div class="users-container">
         <h2>Your followers</h2>
-        <p>You have {{ count }} follower(s).</p>
+        <p>You have {{ count }} follower(s) and you followed {{ followed.length }}.</p>
+        <div class="tabs">
+            <button :class="{ active: activeTab === 'followers' }" @click="activeTab = 'followers'">Followers</button>
+            <button :class="{ active: activeTab === 'followed' }" @click="activeTab = 'followed'">Followed</button>
+        </div>
         <div v-if="requests.length != 0">
             <h4>You have a follower request</h4>
             <div v-for="user in requests" :key="user.username" class="user-card special">
-                <img @click="goToUser(user)" :src="user.profilePicture == 'null' ? user.profilePicture : image" alt="Profile Picture" class="profile-picture" />
+                <img @click="goToUser(user)" :src="user.profilePicture == 'null' ? user.profilePicture : image"
+                    alt="Profile Picture" class="profile-picture" />
                 <div class="user-details">
                     <h3>{{ user.username }}</h3>
                     <p>{{ user.bio }}</p>
-                    <span class="role">{{ user.role }}</span>
+                    <span class="role">{{ user.role == "user_public"? "Public" : "Private" }}</span>
                 </div>
                 <button class="accept-button" @click="acceptFollow(user)">Accept</button>
             </div>
         </div>
-        <div v-for="user in users" :key="user.username" class="user-card" @click="goToUser(user.username)">
-            <img :src="user.profilePicture == 'null' ? user.profilePicture : image" alt="Profile Picture" class="profile-picture" />
+        <div v-if="activeTab === 'followers'" v-for="user in users" :key="user.username" class="user-card"
+            @click="goToUser(user.username)">
+            <img :src="user.profilePicture == 'null' ? user.profilePicture : image" alt="Profile Picture"
+                class="profile-picture" />
             <div class="user-details">
                 <h3>{{ user.username }}</h3>
                 <p>{{ user.bio }}</p>
-                <span class="role">{{ user.role }}</span>
+                <span class="role">{{ user.role == "user_public"? "Public" : "Private" }}</span>
             </div>
         </div>
+
+
+        <div v-if="activeTab === 'followed'" v-for="user in followed" :key="user.username" class="user-card"
+            @click="goToUser(user.username)">
+            <img :src="user.profilePicture == 'null' ? user.profilePicture : image" alt="Profile Picture"
+                class="profile-picture" />
+            <div class="user-details">
+                <h3>{{ user.username }}</h3>
+                <p>{{ user.bio }}</p>
+                <span class="role">{{ user.role == "user_public"? "Public" : "Private" }}</span>
+            </div>
+        </div>
+
     </div>
 </template>
 
-  
+
 <script>
 
 import { getDataGraphQL } from '@/assets/dataProvider';
@@ -37,7 +57,9 @@ export default {
             requests: [],
             error: null,
             count: 0,
-            image: image
+            image: image,
+            followed: [],
+            activeTab: "followers"
         };
     },
     async created() {
@@ -56,7 +78,7 @@ export default {
                 }
             }
             `;
-            const {error} = await getDataGraphQL(query)
+            const { error } = await getDataGraphQL(query)
 
             if (error) {
                 this.error = error;
@@ -83,10 +105,17 @@ export default {
                     bio
                     role
                 }
+                getFollowed {
+                    username
+                    profilePicture
+                    bio
+                    role
+                    followed
+                }
             }
             `;
             try {
-                const {response,error} = await getDataGraphQL(query)
+                const { response, error } = await getDataGraphQL(query)
 
                 if (error) {
                     this.error = error || "An error occurred.";
@@ -94,6 +123,7 @@ export default {
                 else {
                     this.users = response.getFollowers;
                     this.requests = response.getFollowRequests;
+                    this.followed = response.getFollowed;
                     this.count = this.users.length;
                 }
             }
@@ -104,8 +134,31 @@ export default {
     },
 };
 </script>
-  
+
 <style scoped>
+.tabs {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 1rem;
+    border-bottom: #333 solid;
+}
+
+.tabs button {
+    padding: 10px;
+    width: 100%;
+    background-color: transparent;
+    font-size: large;
+    border: none;
+    color: rgb(134, 134, 134);
+    cursor: pointer;
+    border-radius: 5px;
+    transition: 0.3s;
+}
+
+.tabs button.active {
+    color: white;
+}
+
 .users-container {
     display: flex;
     flex-direction: column;
@@ -168,28 +221,17 @@ export default {
 
 .accept-button {
     background-color: #6a1b9a;
-    /* Purple background */
     color: white;
-    /* White text */
     border: none;
-    /* Remove default border */
     padding: 12px 24px;
-    /* Add padding for size */
     font-size: 16px;
-    /* Set font size */
     border-radius: 30px;
-    /* Rounded corners */
     cursor: pointer;
-    /* Pointer cursor on hover */
     transition: background-color 0.3s ease, transform 0.2s;
-    /* Smooth transitions */
 }
 
 .accept-button:hover {
     background-color: #8e24aa;
-    /* Lighter purple on hover */
     transform: scale(1.05);
-    /* Slightly enlarge the button */
 }
 </style>
-  

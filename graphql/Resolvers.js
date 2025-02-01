@@ -699,7 +699,27 @@ const resolvers = {
         } catch (err) {
             return { error: "Error retrieving liked posts" }
         }
-    }
+    },
+    getFollowed: async (args, context) => {
+        if (context.auth.user === "guest") {
+            return { error: "You are not authorized to perform this action" };
+        }
+        try {
+            const users = await User.find({ followers: { $in: context.auth.id } });
+            const filteredUsers = users.map((user) => {
+                return {
+                    username: user.username,
+                    bio: user.bio,
+                    role: user.role,
+                    profilePicture: user.profilePicture,
+                };
+            });
+            
+            return filteredUsers;
+        } catch (err) {
+            return { error: "Error retrieving liked posts" }
+        }
+    },
 };
 
 module.exports = resolvers;

@@ -54,6 +54,7 @@ const schema = buildSchema(`
     searchUsers(query: String): [PublicUser]
     getReports: [Report]
     getLikedPosts: [Post]
+    getFollowed: [PublicUser]
   }
 
   type Post {

@@ -34,7 +34,7 @@ export default {
             if (!routeName) return;
 
             if (!localStorage.getItem('authToken')) {
-                if (routeName !== 'login' && routeName !== 'register' && routeName !== 'about') {
+                if (routeName !== 'login' && routeName !== 'register' && routeName !== 'about' && routeName !== 'report') {
                     this.$router.push({ name: 'login' });
                 }
             }

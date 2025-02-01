@@ -55,11 +55,11 @@
         </div>
         <h2>Users you might know</h2>
         <div v-for="user in users" :key="user.username" class="user-card" @click="goToUser(user.username)">
-            <img :src="user.profilePicture" alt="Profile Picture" class="profile-picture" />
+            <img :src="user.profilePicture== 'none' ? image : user.profilePicture" alt="Profile Picture" class="profile-picture" />
             <div class="user-details">
                 <h3>{{ user.username }}</h3>
                 <p>{{ user.bio }}</p>
-                <span class="role">{{ user.role }}</span>
+                <span class="role">{{ user.role == "user_public"? "Public" : "Private"  }}</span>
             </div>
         </div>
     </div>

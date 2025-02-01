@@ -187,6 +187,7 @@ def generatePost(account,new=False):
                         {new}
                         Create social media post to a topic of your choice which is ready to be uploaded to the platform. Today you are feeling {random.choice(moods)}.
                         The text should have fewer emojis and a more neutral, slightly less positive tone. Maintain the core message but reduce the overly enthusiastic language.
+                        {random.choice(["The post should only be one short sentence no hashtags nothing else one short sentence",""])}
                     '''
     },
     ])
