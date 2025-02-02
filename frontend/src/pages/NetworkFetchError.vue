@@ -13,7 +13,9 @@
     methods: {
       reloadPage() {
         this.$router.push({ name: 'home' });
-        window.location.reload();
+        setTimeout(() => {
+          window.location.reload();
+        },200)
       }
     }
   };
@@ -28,6 +30,7 @@
     background-color: #121212;
     color: #ffffff;
     text-align: center;
+    margin: 10px;
   }
   
   .content {
@@ -50,7 +53,7 @@
   
   button {
     padding: 0.75rem 1.5rem;
-    background-color: #007bff;
+    background-color: #9c27b0;
     color: white;
     border: none;
     border-radius: 6px;

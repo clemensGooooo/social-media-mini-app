@@ -1,28 +1,40 @@
 <template>
-    <div class="liked-page">
+    <div class="page">
         <h2>Your reports</h2>
+        <p>See you reports to content violations, bug reports and other reports.</p>
         <div v-for="user in reports" :key="user.username" class="post-card">
-            <div class="post-header">
-                <h3><b class="report-highlighted">Type of report:</b> {{ user.type }}</h3>
+            <div class="header">
+                <b class="info_report">Type of report:</b>
+                <h3> {{ report[user.type] }}</h3>
+                <div class="divider"></div>
                 <p>{{ formatTime(user.date) }}</p>
             </div>
-            <div class="post-details">
+            <div class="details">
+                <p>Description</p>
                 <p>{{ user.description }}</p>
             </div>
-            <span class="role">{{ user.status == 0? "Your report is pending to be reviewed" : "Your report is being reviewed." }}</span>
+            <span class="status"><b>Status:</b> <span>{{ user.status == 0 ? "pending to be reviewed" : "being reviewed."
+                    }}</span></span>
         </div>
+        <ErrorBox :message="error" @close="clearError" />
     </div>
 </template>
-  
+
 <script>
-import config from '@/config';
 import { getDataGraphQL } from '@/assets/dataProvider';
 import { formatTime } from '@/assets/utils';
+import ErrorBox from '../components/ErrorBox.vue';
 
 export default {
     data() {
         return {
             reports: [],
+            report: {
+                "content": "Content violation",
+                "other": "Unique problem",
+                "bug": " Bug report"
+            },
+            error: ""
         };
     },
     mounted() {
@@ -49,15 +61,21 @@ export default {
                     }
                 })
                 .catch((error) => {
-                    console.error('Error fetching reports:', error);
+                    this.error = "There was an error fetching the reports, please try reloading!"
                 });
         },
+        clearError() {
+            this.error = ""
+        }
     },
+    components: {
+        ErrorBox
+    }
 };
 </script>
-  
+
 <style scoped>
-.liked-page {
+.page {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
@@ -78,16 +96,35 @@ export default {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.post-header {
+.header {
     text-align: left;
 }
 
-.post-details {
+.details {
     margin-top: 1rem;
     word-wrap: break-word;
 }
-.report-highlighted {
+
+.details p:nth-child(1) {
+    font-size: medium;
+    font-weight: bold;
+}
+
+.info_report {
+    font-size: small;
+    color: #838383;
+}
+
+.status span {
     color: #9c27b0;
 }
+
+.status b {
+    font-weight: bold;
+}
+
+.divider {
+    margin: 10px 0px 10px 0px;
+    border-bottom: 1px solid grey;
+}
 </style>
-  
